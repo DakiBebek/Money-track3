@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Duitku</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--bg:#f3f6f2;--card:#fff;--ink:#16241c;--mute:#66756b;--line:#dbe4dc;--main:#1f6b4a;--in:#1f6b4a;--out:#c2452d}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1712;--card:#18231c;--ink:#e8f0ea;--mute:#8fa195;--line:#2a3a2f;--main:#4fbf8a;--in:#4fbf8a;--out:#ef7a62}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Georgia,'Times New Roman',serif;padding-bottom:70px}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:26px;margin:8px 0 16px}h2{font-size:18px;margin:20px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mute{color:var(--mute);font-size:13px}.in{color:var(--in)}.out{color:var(--out)}
+.big{font-size:28px;font-weight:bold}
+input,select{width:100%;padding:10px;margin:4px 0;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+button{padding:10px 14px;border:0;border-radius:8px;background:var(--main);color:#fff;font:inherit;cursor:pointer}
+button.ghost{background:none;color:var(--out);padding:4px 8px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--main);outline-offset:2px}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:6px 0}
+.bar i{display:block;height:100%;background:var(--main)}
+.cols{display:flex;gap:6px;align-items:flex-end;height:120px}
+.cols div{flex:1;text-align:center;font-size:11px}
+.cols span{display:inline-block;width:40%;margin:0 1px;border-radius:3px 3px 0 0;vertical-align:bottom}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--line)}
+nav button{flex:1;background:none;color:var(--mute);border-radius:0;padding:14px 0}
+nav button.on{color:var(--main);font-weight:bold}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+// ====== ISI DENGAN DATA SUPABASE KAMU (Project Settings > API) ======
+const SUPABASE_URL = 'https://pdwehqekftzjcbtgupdn.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkd2VocWVrZnR6amNidGd1cGRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxNzA2MzQsImV4cCI6MjEwNTc0NjYzNH0.nQKP0xtpKa3WKMomfzLnJCNi-QnhWW1UeMamFFYfjQs';
+// ====================================================================
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const v = id => $(id).value;
+const CURS = ['IDR', 'USD', 'EUR', 'SGD', 'MYR', 'JPY', 'AUD', 'GBP', 'SAR', 'TWD'];
+let CUR = 'IDR', RATES = { IDR: 1 }, RATE_T = null;
+try { CUR = localStorage.getItem('cur') || 'IDR'; const c = JSON.parse(localStorage.getItem('rates') || 'null'); if (c) { RATES = c.rates; RATE_T = c.t; } } catch (e) {}
+const rp = n => {
+  const cur = RATES[CUR] ? CUR : 'IDR', d = ['IDR', 'JPY'].includes(cur) ? 0 : 2;
+  return new Intl.NumberFormat(cur === 'IDR' ? 'id-ID' : 'en-US', { style: 'currency', currency: cur, minimumFractionDigits: d, maximumFractionDigits: d }).format(n * RATES[cur]);
+};
+async function fetchRates() { // kurs terbaru, dipanggil setiap halaman dibuka
+  try {
+    const j = await (await fetch('https://open.er-api.com/v6/latest/IDR')).json();
+    if (j.result !== 'success') throw 0;
+    RATES = j.rates; RATE_T = Date.now();
+    try { localStorage.setItem('rates', JSON.stringify({ rates: RATES, t: RATE_T })); } catch (e) {}
+  } catch (e) { /* pakai kurs tersimpan */ }
+  if (document.querySelector('nav')) render();
+}
+function setCur(c) { CUR = c; try { localStorage.setItem('cur', c); } catch (e) {} render(); }
+function curBar() {
+  const r = RATES[CUR], t = RATE_T ? new Date(RATE_T).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) : '';
+  const info = CUR === 'IDR' ? 'Input selalu dalam Rupiah' : r ? `1 ${CUR} = Rp${(1 / r).toLocaleString('id-ID', { maximumFractionDigits: 2 })} · kurs ${t}` : 'Kurs belum tersedia, tampil dalam Rupiah';
+  return `<div class="row mute" style="margin-bottom:4px"><span>${info}</span><select id="cur" style="width:auto" onchange="setCur(this.value)">${CURS.map(c => `<option ${c === CUR ? 'selected' : ''}>${c}</option>`).join('')}</select></div>`;
+}
+const today = () => new Date().toLocaleDateString('en-CA');
+const ym = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+const sum = (a, t) => a.filter(x => x.type === t).reduce((s, x) => s + +x.amount, 0);
+let S = { acc: [], tx: [], inst: [], tab: 'home' };
+
+async function run(p) { const { error } = await p; if (error) { alert(error.message); return false; } return true; }
+
+async function boot() {
+  const { data: { session } } = await sb.auth.getSession();
+  session ? load() : authView();
+}
+async function load() {
+  const [a, t, i] = await Promise.all([
+    sb.from('accounts').select('*').order('created_at'),
+    sb.from('transactions').select('*').order('date', { ascending: false }).order('created_at', { ascending: false }),
+    sb.from('installments').select('*').order('created_at')
+  ]);
+  S.acc = a.data || []; S.tx = t.data || []; S.inst = i.data || [];
+  render();
+}
+
+// ---------- Auth ----------
+function authView() {
+  $('app').innerHTML = `<h1>Duitku <span class="mute">v5</span></h1><div class="card">
+    <input id="em" type="email" placeholder="Email" autocomplete="email">
+    <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
+    <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div>`;
+}
+function needCred() { if (!v('em').trim() || v('pw').length < 6) { alert('Isi email dan kata sandi (min. 6 karakter).'); return true; } }
+async function login() {
+  if (needCred()) return;
+  const email = v('em').trim();
+  const { error } = await sb.auth.signInWithPassword({ email, password: v('pw') });
+  if (error) return alert(error.message + ' [debug: email ' + email.length + ' karakter]');
+  load();
+}
+async function signup() {
+  if (needCred()) return;
+  const { data, error } = await sb.auth.signUp({ email: v('em').trim(), password: v('pw') });
+  if (error) return alert(error.message + ' [debug: email ' + v('em').trim().length + ' karakter]');
+  data.session ? load() : alert('Cek email kamu untuk konfirmasi, lalu masuk.');
+}
+async function logout() { await sb.auth.signOut(); authView(); }
+
+// ---------- Helpers ----------
+const accOpts = () => S.acc.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+const accBal = a => +a.balance + sum(S.tx.filter(t => t.account_id === a.id), 'income') - sum(S.tx.filter(t => t.account_id === a.id), 'expense');
+const accName = id => (S.acc.find(a => a.id === id) || {}).name || '-';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ---------- Views ----------
+function render() {
+  const views = { home, trx, accs, inst };
+  $('app').innerHTML = curBar() + views[S.tab]() + `<nav>${[['home', 'Ringkasan'], ['trx', 'Transaksi'], ['accs', 'Rekening'], ['inst', 'Cicilan']]
+    .map(([k, l]) => `<button class="${S.tab === k ? 'on' : ''}" onclick="S.tab='${k}';render()">${l}</button>`).join('')}</nav>`;
+}
+
+function home() {
+  const now = new Date(), m = ym(now);
+  const cur = S.tx.filter(t => t.date.startsWith(m));
+  const inc = sum(cur, 'income'), exp = sum(cur, 'expense');
+  const total = S.acc.reduce((s, a) => s + accBal(a), 0);
+  const cat = {};
+  cur.filter(t => t.type === 'expense').forEach(t => { const k = t.category || 'Lainnya'; cat[k] = (cat[k] || 0) + +t.amount; });
+  const cats = Object.entries(cat).sort((a, b) => b[1] - a[1]);
+  const months = [...Array(6)].map((_, i) => { const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1); return ym(d); });
+  const data = months.map(k => { const x = S.tx.filter(t => t.date.startsWith(k)); return [k, sum(x, 'income'), sum(x, 'expense')]; });
+  const max = Math.max(1, ...data.flatMap(d => [d[1], d[2]]));
+  return `<h1>Ringkasan</h1>
+  <div class="card"><div class="mute">Total saldo semua rekening</div><div class="big">${rp(total)}</div></div>
+  <div class="row"><div class="card" style="flex:1"><div class="mute">Pemasukan bulan ini</div><b class="in">${rp(inc)}</b></div>
+  <div class="card" style="flex:1"><div class="mute">Pengeluaran bulan ini</div><b class="out">${rp(exp)}</b></div></div>
+  <h2>6 bulan terakhir</h2><div class="card"><div class="cols">${data.map(d =>
+    `<div><span style="height:${d[1] / max * 100}px;background:var(--in)"></span><span style="height:${d[2] / max * 100}px;background:var(--out)"></span><br>${d[0].slice(5)}</div>`).join('')}</div>
+  <div class="mute" style="margin-top:8px"><span class="in">■</span> pemasukan &nbsp; <span class="out">■</span> pengeluaran</div></div>
+  <h2>Pengeluaran per kategori (bulan ini)</h2><div class="card">${cats.length ? cats.map(([k, n]) =>
+    `<div class="row"><span>${esc(k)}</span><span>${rp(n)}</span></div><div class="bar"><i style="width:${n / exp * 100}%"></i></div>`).join('') : '<span class="mute">Belum ada pengeluaran bulan ini.</span>'}</div>
+  <button class="ghost" style="color:var(--mute)" onclick="logout()">Keluar</button>`;
+}
+
+function trx() {
+  if (!S.acc.length) return `<h1>Transaksi</h1><div class="card">Tambah rekening dulu di tab Rekening.</div>`;
+  return `<h1>Transaksi</h1><div class="card">
+    <select id="t_type"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select>
+    <select id="t_acc">${accOpts()}</select>
+    <input id="t_amt" type="number" inputmode="numeric" placeholder="Jumlah (Rp)">
+    <input id="t_cat" placeholder="Kategori (makan, gaji, transport...)">
+    <input id="t_note" placeholder="Catatan (opsional)">
+    <input id="t_date" type="date" value="${today()}">
+    <button onclick="addTx()">Simpan transaksi</button></div>
+  ${S.tx.slice(0, 50).map(t => `<div class="card row"><div><b>${esc(t.category || 'Lainnya')}</b> <span class="mute">${esc(t.note || '')}</span>
+    <div class="mute">${t.date} · ${esc(accName(t.account_id))}</div></div>
+    <div><b class="${t.type === 'income' ? 'in' : 'out'}">${t.type === 'income' ? '+' : '-'}${rp(t.amount)}</b>
+    <button class="ghost" onclick="del('transactions','${t.id}')">Hapus</button></div></div>`).join('') || '<p class="mute">Belum ada transaksi.</p>'}`;
+}
+
+function accs() {
+  return `<h1>Rekening</h1><div class="card">
+    <input id="a_name" placeholder="Nama rekening (BCA, Dompet, GoPay...)">
+    <input id="a_bal" type="number" inputmode="numeric" placeholder="Saldo awal (Rp)">
+    <button onclick="addAcc()">Tambah rekening</button></div>
+  ${S.acc.map(a => `<div class="card row"><div><b>${esc(a.name)}</b><div class="big">${rp(accBal(a))}</div></div>
+    <button class="ghost" onclick="del('accounts','${a.id}')">Hapus</button></div>`).join('')}`;
+}
+
+function inst() {
+  const list = S.inst.map(i => {
+    const left = i.total_months - i.paid_months, pct = i.paid_months / i.total_months * 100;
+    return `<div class="card"><div class="row"><b>${esc(i.name)}</b><span class="mute">${esc(accName(i.account_id))}</span></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="row"><span>${i.paid_months} / ${i.total_months} bulan</span><b>${left > 0 ? left + ' bulan lagi' : 'Lunas'}</b></div>
+      <div class="mute">Sudah dibayar ${rp(i.paid_months * i.monthly_amount)} · Sisa ${rp(left * i.monthly_amount)} · ${rp(i.monthly_amount)}/bulan</div>
+      <div class="row" style="margin-top:8px">${left > 0 ? `<button onclick="pay('${i.id}')">Bayar bulan ini</button>` : '<span></span>'}
+      <button class="ghost" onclick="del('installments','${i.id}')">Hapus</button></div></div>`;
+  }).join('') || '<p class="mute">Belum ada cicilan.</p>';
+  const tot = S.inst.reduce((s, i) => s + (i.total_months - i.paid_months) * i.monthly_amount, 0);
+  return `<h1>Cicilan</h1>
+  <div class="card"><div class="mute">Total sisa semua cicilan</div><div class="big out">${rp(tot)}</div></div>
+  ${S.acc.length ? `<div class="card"><input id="i_name" placeholder="Nama cicilan (HP, motor...)">
+    <input id="i_amt" type="number" inputmode="numeric" placeholder="Cicilan per bulan (Rp)">
+    <input id="i_tot" type="number" inputmode="numeric" placeholder="Total bulan">
+    <input id="i_paid" type="number" inputmode="numeric" placeholder="Sudah dibayar berapa bulan (opsional)">
+    <select id="i_acc">${accOpts()}</select><button onclick="addInst()">Tambah cicilan</button></div>` : '<div class="card">Tambah rekening dulu.</div>'}
+  ${list}`;
+}
+
+// ---------- Actions ----------
+async function addAcc() {
+  if (!v('a_name')) return alert('Isi nama rekening.');
+  if (await run(sb.from('accounts').insert({ name: v('a_name'), balance: +v('a_bal') || 0 }))) load();
+}
+async function addTx() {
+  if (!(+v('t_amt') > 0)) return alert('Isi jumlah.');
+  if (await run(sb.from('transactions').insert({ account_id: v('t_acc'), type: v('t_type'), amount: +v('t_amt'), category: v('t_cat') || null, note: v('t_note') || null, date: v('t_date') || today() }))) load();
+}
+async function addInst() {
+  if (!v('i_name') || !(+v('i_amt') > 0) || !(+v('i_tot') > 0)) return alert('Lengkapi nama, cicilan per bulan, dan total bulan.');
+  if (await run(sb.from('installments').insert({ account_id: v('i_acc'), name: v('i_name'), monthly_amount: +v('i_amt'), total_months: +v('i_tot'), paid_months: Math.min(+v('i_paid') || 0, +v('i_tot')) }))) load();
+}
+async function pay(id) {
+  const i = S.inst.find(x => x.id === id);
+  if (!i || i.paid_months >= i.total_months) return;
+  if (!confirm(`Bayar ${i.name} ${rp(i.monthly_amount)} dari ${accName(i.account_id)}?`)) return;
+  const ok = await run(sb.from('transactions').insert({ account_id: i.account_id, installment_id: i.id, type: 'expense', amount: i.monthly_amount, category: 'Cicilan', note: i.name, date: today() }));
+  if (ok && await run(sb.from('installments').update({ paid_months: i.paid_months + 1 }).eq('id', id))) load();
+}
+async function del(table, id) {
+  if (!confirm('Hapus data ini?' + (table === 'accounts' ? ' Semua transaksi & cicilan di rekening ini ikut terhapus.' : ''))) return;
+  if (await run(sb.from(table).delete().eq('id', id))) load();
+}
+fetchRates();
+boot();
+</script>
+</body>
+</html>
