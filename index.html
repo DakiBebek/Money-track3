@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Duitku</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--bg:#f3f6f2;--card:#fff;--ink:#16241c;--mute:#66756b;--line:#dbe4dc;--main:#1f6b4a;--in:#1f6b4a;--out:#c2452d}
 @media(prefers-color-scheme:dark){:root{--bg:#0f1712;--card:#18231c;--ink:#e8f0ea;--mute:#8fa195;--line:#2a3a2f;--main:#4fbf8a;--in:#4fbf8a;--out:#ef7a62}}
@@ -93,7 +94,7 @@ async function load() {
 
 // ---------- Auth ----------
 function authView() {
-  $('app').innerHTML = `<h1>Duitku <span class="mute">v6</span></h1><div class="card">
+  $('app').innerHTML = `<h1>Duitku <span class="mute">v7</span></h1><div class="card">
     <input id="em" type="email" placeholder="Email" autocomplete="email">
     <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
     <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div>`;
@@ -147,6 +148,9 @@ function home() {
   <div class="mute" style="margin-top:8px"><span class="in">■</span> pemasukan &nbsp; <span class="out">■</span> pengeluaran</div></div>
   <h2>Pengeluaran per kategori (bulan ini)</h2><div class="card">${cats.length ? cats.map(([k, n]) =>
     `<div class="row"><span>${esc(k)}</span><span>${rp(n)}</span></div><div class="bar"><i style="width:${n / exp * 100}%"></i></div>`).join('') : '<span class="mute">Belum ada pengeluaran bulan ini.</span>'}</div>
+  <h2>Unduh data</h2><div class="card"><input id="x_m" type="month" value="${m}">
+    <div class="mute" style="margin-bottom:8px">Kosongkan bulan untuk mengunduh semua data.</div>
+    <button onclick="exportXlsx()">Unduh Excel (.xlsx)</button></div>
   <button class="ghost" style="color:var(--mute)" onclick="logout()">Keluar</button>`;
 }
 
@@ -196,6 +200,25 @@ function inst() {
   ${list}`;
 }
 
+// ---------- Export ----------
+function exportXlsx() {
+  if (typeof XLSX === 'undefined') return alert('Library Excel belum termuat. Cek koneksi lalu coba lagi.');
+  const m = v('x_m'), cur = RATES[CUR] ? CUR : 'IDR', cv = n => +(n * RATES[cur]).toFixed(2);
+  const tx = S.tx.filter(t => !m || t.date.startsWith(m)).sort((a, b) => a.date.localeCompare(b.date));
+  const cat = {};
+  tx.filter(t => t.type === 'expense').forEach(t => { const k = t.category || 'Lainnya'; cat[k] = (cat[k] || 0) + +t.amount; });
+  const inc = sum(tx, 'income'), exp = sum(tx, 'expense');
+  const ringkas = [['Periode', m || 'Semua bulan'], ['Mata uang', cur], ['Pemasukan', cv(inc)], ['Pengeluaran', cv(exp)], ['Selisih', cv(inc - exp)], [],
+    ['Kategori pengeluaran', 'Jumlah'], ...Object.entries(cat).sort((a, b) => b[1] - a[1]).map(([k, n]) => [k, cv(n)])];
+  const rows = tx.map(t => ({ Tanggal: t.date, Rekening: accName(t.account_id), Tipe: t.type === 'income' ? 'Pemasukan' : 'Pengeluaran', Kategori: t.category || 'Lainnya', Catatan: t.note || '', ['Jumlah (' + cur + ')']: cv(t.amount) }));
+  const cic = S.inst.map(i => ({ Cicilan: i.name, Rekening: accName(i.account_id), ['Per bulan (' + cur + ')']: cv(i.monthly_amount), 'Total bulan': i.total_months, 'Bulan terbayar': i.paid_months, 'Sisa bulan': i.total_months - i.paid_months, ['Sudah dibayar (' + cur + ')']: cv(i.paid_months * i.monthly_amount), ['Sisa (' + cur + ')']: cv((i.total_months - i.paid_months) * i.monthly_amount) }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ringkas), 'Ringkasan');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Transaksi');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(cic), 'Cicilan');
+  XLSX.writeFile(wb, 'duitku-' + (m || 'semua') + '.xlsx');
+}
+
 // ---------- Actions ----------
 async function addAcc() {
   if (!v('a_name')) return alert('Isi nama rekening.');
@@ -228,4 +251,3 @@ boot();
 </script>
 </body>
 </html>
-
