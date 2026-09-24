@@ -27,7 +27,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .cols div{flex:1;text-align:center;font-size:11px}
 .cols span{display:inline-block;width:40%;margin:0 1px;border-radius:3px 3px 0 0;vertical-align:bottom}
 nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--line)}
-nav button{flex:1;background:none;color:var(--mute);border-radius:0;padding:14px 0}
+nav button{flex:1;background:none;color:var(--mute);border-radius:0;padding:14px 0;font-size:13px}
 nav button.on{color:var(--main);font-weight:bold}
 </style>
 </head>
@@ -74,7 +74,7 @@ function curBar() {
 const today = () => new Date().toLocaleDateString('en-CA');
 const ym = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
 const sum = (a, t) => a.filter(x => x.type === t).reduce((s, x) => s + +x.amount, 0);
-let S = { acc: [], tx: [], inst: [], tab: 'home' };
+let S = { acc: [], tx: [], inst: [], sav: [], mv: [], tab: 'home' };
 
 async function run(p) { const { error } = await p; if (error) { alert(error.message); return false; } return true; }
 
@@ -83,18 +83,20 @@ async function boot() {
   session ? load() : authView();
 }
 async function load() {
-  const [a, t, i] = await Promise.all([
+  const [a, t, i, sv, mv] = await Promise.all([
     sb.from('accounts').select('*').order('created_at'),
     sb.from('transactions').select('*').order('date', { ascending: false }).order('created_at', { ascending: false }),
-    sb.from('installments').select('*').order('created_at')
+    sb.from('installments').select('*').order('created_at'),
+    sb.from('savings').select('*').order('created_at'),
+    sb.from('saving_moves').select('*').order('created_at')
   ]);
-  S.acc = a.data || []; S.tx = t.data || []; S.inst = i.data || [];
+  S.acc = a.data || []; S.tx = t.data || []; S.inst = i.data || []; S.sav = sv.data || []; S.mv = mv.data || [];
   render();
 }
 
 // ---------- Auth ----------
 function authView() {
-  $('app').innerHTML = `<h1>Duitku <span class="mute">v7</span></h1><div class="card">
+  $('app').innerHTML = `<h1>Duitku <span class="mute">v8</span></h1><div class="card">
     <input id="em" type="email" placeholder="Email" autocomplete="email">
     <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
     <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div>`;
@@ -117,14 +119,17 @@ async function logout() { await sb.auth.signOut(); authView(); }
 
 // ---------- Helpers ----------
 const accOpts = () => S.acc.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
-const accBal = a => +a.balance + sum(S.tx.filter(t => t.account_id === a.id), 'income') - sum(S.tx.filter(t => t.account_id === a.id), 'expense');
+const accBal = a => +a.balance + sum(S.tx.filter(t => t.account_id === a.id), 'income') - sum(S.tx.filter(t => t.account_id === a.id), 'expense')
+  - sum(S.mv.filter(m => m.account_id === a.id), 'deposit') + sum(S.mv.filter(m => m.account_id === a.id), 'withdraw');
+const savBal = x => sum(S.mv.filter(m => m.saving_id === x.id), 'deposit') - sum(S.mv.filter(m => m.saving_id === x.id), 'withdraw');
+const savTotal = () => S.sav.reduce((t, x) => t + savBal(x), 0);
 const accName = id => (S.acc.find(a => a.id === id) || {}).name || '-';
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // ---------- Views ----------
 function render() {
-  const views = { home, trx, accs, inst };
-  $('app').innerHTML = curBar() + views[S.tab]() + `<nav>${[['home', 'Ringkasan'], ['trx', 'Transaksi'], ['accs', 'Rekening'], ['inst', 'Cicilan']]
+  const views = { home, trx, accs, inst, sav };
+  $('app').innerHTML = curBar() + views[S.tab]() + `<nav>${[['home', 'Ringkasan'], ['trx', 'Transaksi'], ['accs', 'Rekening'], ['inst', 'Cicilan'], ['sav', 'Tabungan']]
     .map(([k, l]) => `<button class="${S.tab === k ? 'on' : ''}" onclick="S.tab='${k}';render()">${l}</button>`).join('')}</nav>`;
 }
 
@@ -140,7 +145,7 @@ function home() {
   const data = months.map(k => { const x = S.tx.filter(t => t.date.startsWith(k)); return [k, sum(x, 'income'), sum(x, 'expense')]; });
   const max = Math.max(1, ...data.flatMap(d => [d[1], d[2]]));
   return `<h1>Ringkasan</h1>
-  <div class="card"><div class="mute">Total saldo semua rekening</div><div class="big">${rp(total)}</div></div>
+  <div class="card"><div class="mute">Total saldo semua rekening</div><div class="big">${rp(total)}</div><div class="mute">+ Tabungan ${rp(savTotal())}</div></div>
   <div class="row"><div class="card" style="flex:1"><div class="mute">Pemasukan bulan ini</div><b class="in">${rp(inc)}</b></div>
   <div class="card" style="flex:1"><div class="mute">Pengeluaran bulan ini</div><b class="out">${rp(exp)}</b></div></div>
   <h2>6 bulan terakhir</h2><div class="card"><div class="cols">${data.map(d =>
@@ -212,14 +217,48 @@ function exportXlsx() {
     ['Kategori pengeluaran', 'Jumlah'], ...Object.entries(cat).sort((a, b) => b[1] - a[1]).map(([k, n]) => [k, cv(n)])];
   const rows = tx.map(t => ({ Tanggal: t.date, Rekening: accName(t.account_id), Tipe: t.type === 'income' ? 'Pemasukan' : 'Pengeluaran', Kategori: t.category || 'Lainnya', Catatan: t.note || '', ['Jumlah (' + cur + ')']: cv(t.amount) }));
   const cic = S.inst.map(i => ({ Cicilan: i.name, Rekening: accName(i.account_id), ['Per bulan (' + cur + ')']: cv(i.monthly_amount), 'Total bulan': i.total_months, 'Bulan terbayar': i.paid_months, 'Sisa bulan': i.total_months - i.paid_months, ['Sudah dibayar (' + cur + ')']: cv(i.paid_months * i.monthly_amount), ['Sisa (' + cur + ')']: cv((i.total_months - i.paid_months) * i.monthly_amount) }));
+  const tab = S.sav.map(x => ({ Tabungan: x.name, ['Target (' + cur + ')']: x.target ? cv(x.target) : '', ['Saldo (' + cur + ')']: cv(savBal(x)) }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ringkas), 'Ringkasan');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Transaksi');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(cic), 'Cicilan');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(tab), 'Tabungan');
   XLSX.writeFile(wb, 'duitku-' + (m || 'semua') + '.xlsx');
 }
 
+function sav() {
+  const list = S.sav.map(x => {
+    const b = savBal(x), pct = x.target ? Math.max(0, Math.min(100, b / x.target * 100)) : 0;
+    return `<div class="card"><div class="row"><b>${esc(x.name)}</b><button class="ghost" onclick="del('savings','${x.id}')">Hapus</button></div>
+      <div class="big">${rp(b)}</div>
+      ${x.target ? `<div class="bar"><i style="width:${pct}%"></i></div><div class="mute">Target ${rp(x.target)} · ${Math.round(pct)}% · kurang ${rp(Math.max(0, x.target - b))}</div>` : ''}
+      ${S.acc.length ? `<input id="m_amt_${x.id}" type="number" step="any" inputmode="decimal" placeholder="Jumlah (${CUR})">
+      <select id="m_acc_${x.id}">${accOpts()}</select>
+      <div class="row"><button onclick="move('${x.id}','deposit')">Setor dari rekening</button><button onclick="move('${x.id}','withdraw')">Tarik ke rekening</button></div>
+      <button class="ghost" style="color:var(--mute)" onclick="move('${x.id}','withdraw',true)">Tarik semua</button>` : '<div class="mute">Tambah rekening dulu.</div>'}</div>`;
+  }).join('') || '<p class="mute">Belum ada tabungan.</p>';
+  return `<h1>Tabungan</h1><div class="card"><div class="mute">Total semua tabungan</div><div class="big">${rp(savTotal())}</div></div>
+  <div class="card"><input id="s_name" placeholder="Nama tabungan (Dana darurat, Liburan...)">
+    <input id="s_tgt" type="number" step="any" inputmode="decimal" placeholder="Target (${CUR}, opsional)">
+    <button onclick="addSav()">Tambah tabungan</button></div>${list}`;
+}
+
 // ---------- Actions ----------
+async function addSav() {
+  if (!v('s_name')) return alert('Isi nama tabungan.');
+  const t = inIDR('s_tgt'); if (t === null) return;
+  if (await run(sb.from('savings').insert({ name: v('s_name'), target: t > 0 ? t : null }))) load();
+}
+async function move(id, type, all) {
+  const x = S.sav.find(y => y.id === id), acc = S.acc.find(a => a.id === v('m_acc_' + id));
+  if (!x || !acc) return;
+  let amt = all ? savBal(x) : inIDR('m_amt_' + id);
+  if (amt === null) return;
+  if (!(amt > 0)) return alert(all ? 'Tabungan ini masih kosong.' : 'Isi jumlah.');
+  if (type === 'withdraw' && amt > savBal(x) + 1) return alert('Saldo tabungan tidak cukup. Sisa ' + rp(savBal(x)));
+  if (type === 'deposit' && amt > accBal(acc) && !confirm('Saldo ' + acc.name + ' tidak cukup dan akan minus. Lanjut?')) return;
+  if (await run(sb.from('saving_moves').insert({ saving_id: id, account_id: acc.id, type, amount: amt, date: today() }))) load();
+}
 async function addAcc() {
   if (!v('a_name')) return alert('Isi nama rekening.');
   const bal = inIDR('a_bal'); if (bal === null) return;
@@ -243,7 +282,7 @@ async function pay(id) {
   if (ok && await run(sb.from('installments').update({ paid_months: i.paid_months + 1 }).eq('id', id))) load();
 }
 async function del(table, id) {
-  if (!confirm('Hapus data ini?' + (table === 'accounts' ? ' Semua transaksi & cicilan di rekening ini ikut terhapus.' : ''))) return;
+  if (!confirm('Hapus data ini?' + (table === 'accounts' ? ' Semua transaksi & cicilan di rekening ini ikut terhapus.' : table === 'savings' ? ' Riwayat setor/tarik ikut terhapus dan saldo rekening kembali seperti sebelum tabungan ini ada.' : ''))) return;
   if (await run(sb.from(table).delete().eq('id', id))) load();
 }
 fetchRates();
@@ -251,3 +290,4 @@ boot();
 </script>
 </body>
 </html>
+
