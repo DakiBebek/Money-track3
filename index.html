@@ -96,7 +96,7 @@ async function load() {
 
 // ---------- Auth ----------
 function authView() {
-  $('app').innerHTML = `<h1>Duitku <span class="mute">v8</span></h1><div class="card">
+  $('app').innerHTML = `<h1>Duitku <span class="mute">v9</span></h1><div class="card">
     <input id="em" type="email" placeholder="Email" autocomplete="email">
     <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
     <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div>`;
@@ -232,10 +232,10 @@ function sav() {
     return `<div class="card"><div class="row"><b>${esc(x.name)}</b><button class="ghost" onclick="del('savings','${x.id}')">Hapus</button></div>
       <div class="big">${rp(b)}</div>
       ${x.target ? `<div class="bar"><i style="width:${pct}%"></i></div><div class="mute">Target ${rp(x.target)} · ${Math.round(pct)}% · kurang ${rp(Math.max(0, x.target - b))}</div>` : ''}
-      ${S.acc.length ? `<input id="m_amt_${x.id}" type="number" step="any" inputmode="decimal" placeholder="Jumlah (${CUR})">
-      <select id="m_acc_${x.id}">${accOpts()}</select>
-      <div class="row"><button onclick="move('${x.id}','deposit')">Setor dari rekening</button><button onclick="move('${x.id}','withdraw')">Tarik ke rekening</button></div>
-      <button class="ghost" style="color:var(--mute)" onclick="move('${x.id}','withdraw',true)">Tarik semua</button>` : '<div class="mute">Tambah rekening dulu.</div>'}</div>`;
+      <input id="m_amt_${x.id}" type="number" step="any" inputmode="decimal" placeholder="Jumlah (${CUR})">
+      <div class="row"><button onclick="move('${x.id}','add')">Tambah dana</button><button onclick="move('${x.id}','set')">Set jumlah</button></div>
+      ${S.acc.length ? `<div class="mute" style="margin-top:10px">Pindahkan ke rekening</div><select id="m_acc_${x.id}">${accOpts()}</select>
+      <div class="row"><button onclick="move('${x.id}','withdraw')">Tarik ke rekening</button><button class="ghost" style="color:var(--mute)" onclick="move('${x.id}','withdraw',true)">Tarik semua</button></div>` : '<div class="mute" style="margin-top:8px">Tambah rekening untuk bisa menarik dana ke rekening.</div>'}</div>`;
   }).join('') || '<p class="mute">Belum ada tabungan.</p>';
   return `<h1>Tabungan</h1><div class="card"><div class="mute">Total semua tabungan</div><div class="big">${rp(savTotal())}</div></div>
   <div class="card"><input id="s_name" placeholder="Nama tabungan (Dana darurat, Liburan...)">
@@ -250,14 +250,26 @@ async function addSav() {
   if (await run(sb.from('savings').insert({ name: v('s_name'), target: t > 0 ? t : null }))) load();
 }
 async function move(id, type, all) {
-  const x = S.sav.find(y => y.id === id), acc = S.acc.find(a => a.id === v('m_acc_' + id));
-  if (!x || !acc) return;
-  let amt = all ? savBal(x) : inIDR('m_amt_' + id);
+  const x = S.sav.find(y => y.id === id); if (!x) return;
+  const cur = savBal(x);
+  let amt = all ? cur : inIDR('m_amt_' + id);
   if (amt === null) return;
-  if (!(amt > 0)) return alert(all ? 'Tabungan ini masih kosong.' : 'Isi jumlah.');
-  if (type === 'withdraw' && amt > savBal(x) + 1) return alert('Saldo tabungan tidak cukup. Sisa ' + rp(savBal(x)));
-  if (type === 'deposit' && amt > accBal(acc) && !confirm('Saldo ' + acc.name + ' tidak cukup dan akan minus. Lanjut?')) return;
-  if (await run(sb.from('saving_moves').insert({ saving_id: id, account_id: acc.id, type, amount: amt, date: today() }))) load();
+  let mt = type === 'add' ? 'deposit' : 'withdraw', accId = null; // 'add' & 'set' tidak menyentuh rekening
+  if (type === 'set') {
+    if (v('m_amt_' + id) === '') return alert('Isi jumlah tabungan yang diinginkan.');
+    const diff = amt - cur;
+    if (Math.abs(diff) < 1) return alert('Jumlahnya sudah sama.');
+    if (diff < 0 && !confirm('Tabungan dikurangi ' + rp(-diff) + ' tanpa dipindah ke rekening. Lanjut?')) return;
+    mt = diff > 0 ? 'deposit' : 'withdraw'; amt = Math.abs(diff);
+  } else {
+    if (!(amt > 0)) return alert(all ? 'Tabungan ini masih kosong.' : 'Isi jumlah.');
+    if (type === 'withdraw') {
+      if (amt > cur + 1) return alert('Saldo tabungan tidak cukup. Sisa ' + rp(cur));
+      const acc = S.acc.find(a => a.id === v('m_acc_' + id)); if (!acc) return alert('Pilih rekening tujuan.');
+      accId = acc.id;
+    }
+  }
+  if (await run(sb.from('saving_moves').insert({ saving_id: id, account_id: accId, type: mt, amount: amt, date: today() }))) load();
 }
 async function addAcc() {
   if (!v('a_name')) return alert('Isi nama rekening.');
@@ -282,7 +294,7 @@ async function pay(id) {
   if (ok && await run(sb.from('installments').update({ paid_months: i.paid_months + 1 }).eq('id', id))) load();
 }
 async function del(table, id) {
-  if (!confirm('Hapus data ini?' + (table === 'accounts' ? ' Semua transaksi & cicilan di rekening ini ikut terhapus.' : table === 'savings' ? ' Riwayat setor/tarik ikut terhapus dan saldo rekening kembali seperti sebelum tabungan ini ada.' : ''))) return;
+  if (!confirm('Hapus data ini?' + (table === 'accounts' ? ' Semua transaksi & cicilan di rekening ini ikut terhapus.' : table === 'savings' ? ' Riwayat tabungan ikut terhapus, dan dana yang pernah ditarik ke rekening ikut dibatalkan dari saldo rekening.' : ''))) return;
   if (await run(sb.from(table).delete().eq('id', id))) load();
 }
 fetchRates();
@@ -290,4 +302,3 @@ boot();
 </script>
 </body>
 </html>
-
