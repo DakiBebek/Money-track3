@@ -109,7 +109,7 @@ async function load() {
 
 // ---------- Auth ----------
 function authView() {
-  $('app').innerHTML = `<div class="wrap"><h1>Duitku <span class="mute">v10</span></h1><div class="card">
+  $('app').innerHTML = `<div class="wrap"><h1>Duitku <span class="mute">v11</span></h1><div class="card">
     <input id="em" type="email" placeholder="Email" autocomplete="email">
     <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
     <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div></div>`;
@@ -164,8 +164,9 @@ function home() {
   const max = Math.max(1, ...data.flatMap(d => [d[1], d[2]]));
   return `<div class="hero"><div class="row"><span class="greet">👋 Ringkasan</span></div>
     <span class="pill">${now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</span>
-    <div class="mute" style="margin-top:14px">TOTAL SALDO + TABUNGAN</div>
-    <div class="bal">${rp(total + savTotal())}</div>
+    <div class="mute" style="margin-top:14px">TOTAL SALDO</div>
+    <div class="bal">${rp(total)}</div>
+    <div class="mute">+ Tabungan ${rp(savTotal())}</div>
     <div class="chips"><div class="chip"><div class="mute" style="color:rgba(255,255,255,.8)">↓ Masuk</div><div class="n">${rp(inc)}</div></div>
     <div class="chip"><div class="mute" style="color:rgba(255,255,255,.8)">↑ Keluar</div><div class="n">${rp(exp)}</div></div></div></div>
   <div class="wrap" style="padding-top:60px">${curBar()}
