@@ -7,10 +7,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--bg:#eef1f8;--card:#fff;--ink:#151a30;--mute:#7c85a3;--line:#e4e8f5;--main:#3956f5;--main2:#2540d6;--in:#1fa15c;--out:#e5533d;--hero1:#3956f5;--hero2:#2135b8;--chip:#4a68ff}
-@media(prefers-color-scheme:dark){:root{--bg:#0d1020;--card:#161b34;--ink:#eef0fb;--mute:#8992b8;--line:#262c4c;--main:#5b7bff;--main2:#3956f5;--in:#33c281;--out:#ff6b53;--hero1:#2135b8;--hero2:#131f80;--chip:#4a68ff}}
+:root{--bg:#eef1f8;--card:#fff;--ink:#151a30;--mute:#7c85a3;--line:#e4e8f5;--main:#3956f5;--main2:#2540d6;--in:#1fa15c;--out:#e5533d;--hero1:#3956f5;--hero2:#2135b8;--hero-ink:#fff;--hero-mute:rgba(255,255,255,.75);--hero-chip:rgba(255,255,255,.14);--hero-border:none;--font:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+@media(prefers-color-scheme:dark){:root:not([data-theme]){--bg:#0d1020;--card:#161b34;--ink:#eef0fb;--mute:#8992b8;--line:#262c4c;--main:#5b7bff;--main2:#3956f5;--in:#33c281;--out:#ff6b53;--hero1:#2135b8;--hero2:#131f80}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;padding-bottom:86px}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--font);padding-bottom:86px}
 main{max-width:640px;margin:0 auto}
 h1{font-size:22px;font-weight:800;margin:0 0 14px;padding:16px 0 0}
 h2{font-size:15px;font-weight:700;margin:18px 16px 8px}
@@ -28,14 +28,25 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .cols{display:flex;gap:6px;align-items:flex-end;height:120px}
 .cols div{flex:1;text-align:center;font-size:11px}
 .cols span{display:inline-block;width:40%;margin:0 1px;border-radius:3px 3px 0 0;vertical-align:bottom}
-.hero{background:linear-gradient(160deg,var(--hero1),var(--hero2));color:#fff;padding:22px 16px 60px;border-radius:0 0 28px 28px;margin-bottom:-46px}
+.hero{background:linear-gradient(160deg,var(--hero1),var(--hero2));color:var(--hero-ink);padding:22px 16px 60px;border-radius:0 0 28px 28px;margin-bottom:-46px;border:var(--hero-border)}
 .hero .greet{font-size:20px;font-weight:800}
-.hero .mute{color:rgba(255,255,255,.75)}
-.hero .pill{display:inline-block;background:rgba(255,255,255,.16);padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;margin-top:10px}
+.hero .mute{color:var(--hero-mute)}
+.hero .pill{display:inline-block;background:var(--hero-chip);padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;margin-top:10px}
 .hero .bal{font-size:34px;font-weight:800;margin:6px 0 12px}
 .chips{display:flex;gap:8px}
-.chip{flex:1;background:rgba(255,255,255,.14);border-radius:14px;padding:12px}
+.chip{flex:1;background:var(--hero-chip);border-radius:14px;padding:12px}
 .chip .n{font-weight:700;font-size:15px}
+.gear{position:fixed;top:14px;right:14px;z-index:30;width:38px;height:38px;border-radius:50%;background:var(--hero-chip);color:var(--hero-ink);display:flex;align-items:center;justify-content:center;font-size:18px;border:0;padding:0;cursor:pointer}
+.wrap .gear{position:absolute;top:16px;background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40;display:flex;align-items:flex-end}
+.sheet{background:var(--card);color:var(--ink);width:100%;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+.sheet h3{margin:0 0 12px;font-size:17px}
+.theme-opt{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.theme-opt:last-child{border-bottom:0}
+.swatch{width:34px;height:34px;border-radius:10px;flex-shrink:0}
+.theme-opt b{display:block}
+.theme-opt.on{font-weight:700}
+.theme-opt .check{margin-left:auto;color:var(--main);font-weight:800}
 .icon{width:40px;height:40px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
 .txitem{display:flex;gap:10px;align-items:center}
 nav{position:fixed;bottom:0;left:0;right:0;display:flex;align-items:flex-end;background:var(--card);border-top:1px solid var(--line);padding:6px 0}
@@ -97,6 +108,31 @@ const today = () => new Date().toLocaleDateString('en-CA');
 const ym = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
 const sum = (a, t) => a.filter(x => x.type === t).reduce((s, x) => s + +x.amount, 0);
 let S = { acc: [], tx: [], inst: [], sav: [], mv: [], tab: 'home' };
+const THEMES = {
+  modern: { label: 'Modern (Biru)', swatch: '#3956f5', vars: { '--bg': '#eef1f8', '--card': '#fff', '--ink': '#151a30', '--mute': '#7c85a3', '--line': '#e4e8f5', '--main': '#3956f5', '--main2': '#2540d6', '--in': '#1fa15c', '--out': '#e5533d', '--hero1': '#3956f5', '--hero2': '#2135b8', '--hero-ink': '#fff', '--hero-mute': 'rgba(255,255,255,.75)', '--hero-chip': 'rgba(255,255,255,.14)', '--hero-border': 'none', '--font': "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" } },
+  klasik: { label: 'Klasik (Hijau)', swatch: '#1f6b4a', vars: { '--bg': '#f3f6f2', '--card': '#fff', '--ink': '#16241c', '--mute': '#66756b', '--line': '#dbe4dc', '--main': '#1f6b4a', '--main2': '#18563b', '--in': '#1f6b4a', '--out': '#c2452d', '--hero1': '#fff', '--hero2': '#fff', '--hero-ink': '#16241c', '--hero-mute': '#66756b', '--hero-chip': '#f3f6f2', '--hero-border': '1px solid #dbe4dc', '--font': "Georgia,'Times New Roman',serif" } },
+  gelap: { label: 'Gelap Elegan (Ungu)', swatch: '#7c5cff', vars: { '--bg': '#120f1e', '--card': '#1c1830', '--ink': '#efeaff', '--mute': '#9b93c2', '--line': '#2e2850', '--main': '#8b6bff', '--main2': '#6f4dff', '--in': '#33c281', '--out': '#ff6b6b', '--hero1': '#5c3ff0', '--hero2': '#2a1866', '--hero-ink': '#fff', '--hero-mute': 'rgba(255,255,255,.75)', '--hero-chip': 'rgba(255,255,255,.14)', '--hero-border': 'none', '--font': "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" } },
+  minimal: { label: 'Minimalis (Monokrom)', swatch: '#111827', vars: { '--bg': '#f5f5f4', '--card': '#fff', '--ink': '#111827', '--mute': '#6b7280', '--line': '#e5e7eb', '--main': '#111827', '--main2': '#000', '--in': '#0f8a4b', '--out': '#c1382b', '--hero1': '#fff', '--hero2': '#fff', '--hero-ink': '#111827', '--hero-mute': '#6b7280', '--hero-chip': '#f5f5f4', '--hero-border': '1px solid #e5e7eb', '--font': "'Helvetica Neue',Arial,sans-serif" } },
+};
+let CURRENT_THEME = 'modern';
+function applyTheme(name) {
+  const t = THEMES[name]; if (!t) return;
+  CURRENT_THEME = name;
+  Object.entries(t.vars).forEach(([k, val]) => document.documentElement.style.setProperty(k, val));
+  try { localStorage.setItem('theme', name); } catch (e) {}
+}
+try { applyTheme(localStorage.getItem('theme') || 'modern'); } catch (e) { applyTheme('modern'); }
+let showThemeSheet = false;
+function toggleThemeSheet(v) { showThemeSheet = v; render(); }
+function pickTheme(name) { applyTheme(name); render(); }
+function themeSheetHtml() {
+  if (!showThemeSheet) return '';
+  return '<div class="sheet-bg" onclick="if(event.target===this)toggleThemeSheet(false)"><div class="sheet"><h3>Pilih tema</h3>' +
+    Object.entries(THEMES).map(([k, t]) => '<div class="theme-opt ' + (k === CURRENT_THEME ? 'on' : '') + '" onclick="pickTheme(\'' + k + '\')">' +
+      '<div class="swatch" style="background:' + t.swatch + '"></div><b>' + t.label + '</b>' + (k === CURRENT_THEME ? '<span class="check">&check;</span>' : '') + '</div>').join('') +
+    '<button style="width:100%;margin-top:12px;background:var(--bg);color:var(--ink)" onclick="toggleThemeSheet(false)">Tutup</button></div></div>';
+}
+function gearBtn() { return '<button class="gear" onclick="toggleThemeSheet(true)">\u2699\ufe0f</button>'; }
 
 async function run(p) { const { error } = await p; if (error) { alert(error.message); return false; } return true; }
 
@@ -118,7 +154,7 @@ async function load() {
 
 // ---------- Auth ----------
 function authView() {
-  $('app').innerHTML = `<div class="wrap"><h1>Duitku <span class="mute">v12</span></h1><div class="card">
+  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v14</span></h1><div class="card">
     <input id="em" type="email" placeholder="Email" autocomplete="email">
     <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
     <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div></div>`;
@@ -157,7 +193,7 @@ function render() {
   const navHtml = `<nav>${tabs.map(([k, l, ic]) => k === 'fab'
     ? `<button class="fab" onclick="S.tab='trx';render()">+</button>`
     : `<button class="${S.tab === k ? 'on' : ''}" onclick="S.tab='${k}';render()">${ic} ${l}</button>`).join('')}</nav>`;
-  $('app').innerHTML = (S.tab === 'home' ? views.home() : `<div class="wrap">${curBar()}${views[S.tab]()}</div>`) + navHtml;
+  $('app').innerHTML = (S.tab === 'home' ? views.home() : `<div class="wrap" style="position:relative"><button class="gear" style="right:16px" onclick="toggleThemeSheet(true)">⚙️</button>${curBar()}${views[S.tab]()}</div>`) + navHtml + themeSheetHtml();
 }
 
 function home() {
@@ -171,13 +207,13 @@ function home() {
   const months = [...Array(6)].map((_, i) => { const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1); return ym(d); });
   const data = months.map(k => { const x = S.tx.filter(t => t.date.startsWith(k)); return [k, sum(x, 'income'), sum(x, 'expense')]; });
   const max = Math.max(1, ...data.flatMap(d => [d[1], d[2]]));
-  return `<div class="hero"><div class="row"><span class="greet">👋 Ringkasan</span></div>
+  return `<div class="hero"><div class="row"><span class="greet">👋 Ringkasan</span><button class="gear" onclick="toggleThemeSheet(true)">⚙️</button></div>
     <span class="pill">${now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</span>
     <div class="mute" style="margin-top:14px">TOTAL SALDO</div>
     <div class="bal">${rp(total)}</div>
     <div class="mute">+ Tabungan ${rp(savTotal())}</div>
-    <div class="chips"><div class="chip"><div class="mute" style="color:rgba(255,255,255,.8)">↓ Masuk</div><div class="n">${rp(inc)}</div></div>
-    <div class="chip"><div class="mute" style="color:rgba(255,255,255,.8)">↑ Keluar</div><div class="n">${rp(exp)}</div></div></div></div>
+    <div class="chips"><div class="chip"><div class="mute">↓ Masuk</div><div class="n">${rp(inc)}</div></div>
+    <div class="chip"><div class="mute">↑ Keluar</div><div class="n">${rp(exp)}</div></div></div></div>
   <div class="wrap" style="padding-top:60px">${curBar()}
   <div class="card row"><span class="mute">Saldo rekening</span><b>${rp(total)}</b></div>
   <div class="card row"><span class="mute">Tabungan</span><b>${rp(savTotal())}</b></div>
