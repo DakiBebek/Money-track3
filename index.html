@@ -7,28 +7,41 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--bg:#f3f6f2;--card:#fff;--ink:#16241c;--mute:#66756b;--line:#dbe4dc;--main:#1f6b4a;--in:#1f6b4a;--out:#c2452d}
-@media(prefers-color-scheme:dark){:root{--bg:#0f1712;--card:#18231c;--ink:#e8f0ea;--mute:#8fa195;--line:#2a3a2f;--main:#4fbf8a;--in:#4fbf8a;--out:#ef7a62}}
+:root{--bg:#eef1f8;--card:#fff;--ink:#151a30;--mute:#7c85a3;--line:#e4e8f5;--main:#3956f5;--main2:#2540d6;--in:#1fa15c;--out:#e5533d;--hero1:#3956f5;--hero2:#2135b8;--chip:#4a68ff}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1020;--card:#161b34;--ink:#eef0fb;--mute:#8992b8;--line:#262c4c;--main:#5b7bff;--main2:#3956f5;--in:#33c281;--out:#ff6b53;--hero1:#2135b8;--hero2:#131f80;--chip:#4a68ff}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Georgia,'Times New Roman',serif;padding-bottom:70px}
-main{max-width:640px;margin:0 auto;padding:16px}
-h1{font-size:26px;margin:8px 0 16px}h2{font-size:18px;margin:20px 0 8px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:10px}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;padding-bottom:86px}
+main{max-width:640px;margin:0 auto}
+h1{font-size:22px;font-weight:800;margin:0 0 14px;padding:16px 0 0}
+h2{font-size:15px;font-weight:700;margin:18px 16px 8px}
+.wrap{padding:0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:10px}
 .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .mute{color:var(--mute);font-size:13px}.in{color:var(--in)}.out{color:var(--out)}
-.big{font-size:28px;font-weight:bold}
-input,select{width:100%;padding:10px;margin:4px 0;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
-button{padding:10px 14px;border:0;border-radius:8px;background:var(--main);color:#fff;font:inherit;cursor:pointer}
-button.ghost{background:none;color:var(--out);padding:4px 8px}
+.big{font-size:26px;font-weight:800}
+input,select{width:100%;padding:12px;margin:5px 0;border:1px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);font:inherit}
+button{padding:12px 16px;border:0;border-radius:12px;background:var(--main);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+button.ghost{background:none;color:var(--out);padding:4px 8px;font-weight:600}
 button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--main);outline-offset:2px}
 .bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:6px 0}
 .bar i{display:block;height:100%;background:var(--main)}
 .cols{display:flex;gap:6px;align-items:flex-end;height:120px}
 .cols div{flex:1;text-align:center;font-size:11px}
 .cols span{display:inline-block;width:40%;margin:0 1px;border-radius:3px 3px 0 0;vertical-align:bottom}
-nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--card);border-top:1px solid var(--line)}
-nav button{flex:1;background:none;color:var(--mute);border-radius:0;padding:14px 0;font-size:13px}
-nav button.on{color:var(--main);font-weight:bold}
+.hero{background:linear-gradient(160deg,var(--hero1),var(--hero2));color:#fff;padding:22px 16px 60px;border-radius:0 0 28px 28px;margin-bottom:-46px}
+.hero .greet{font-size:20px;font-weight:800}
+.hero .mute{color:rgba(255,255,255,.75)}
+.hero .pill{display:inline-block;background:rgba(255,255,255,.16);padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;margin-top:10px}
+.hero .bal{font-size:34px;font-weight:800;margin:6px 0 12px}
+.chips{display:flex;gap:8px}
+.chip{flex:1;background:rgba(255,255,255,.14);border-radius:14px;padding:12px}
+.chip .n{font-weight:700;font-size:15px}
+.icon{width:40px;height:40px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.txitem{display:flex;gap:10px;align-items:center}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;align-items:flex-end;background:var(--card);border-top:1px solid var(--line);padding:6px 0}
+nav button{flex:1;background:none;color:var(--mute);border-radius:0;padding:10px 0 8px;font-size:11px;font-weight:600}
+nav button.on{color:var(--main)}
+nav button.fab{position:relative;top:-18px;flex:0 0 auto;width:54px;height:54px;border-radius:50%;background:linear-gradient(160deg,var(--hero1),var(--hero2));color:#fff;font-size:26px;font-weight:400;box-shadow:0 6px 14px rgba(57,86,245,.4);display:flex;align-items:center;justify-content:center;margin:0 10px}
 </style>
 </head>
 <body>
@@ -96,10 +109,10 @@ async function load() {
 
 // ---------- Auth ----------
 function authView() {
-  $('app').innerHTML = `<h1>Duitku <span class="mute">v9</span></h1><div class="card">
+  $('app').innerHTML = `<div class="wrap"><h1>Duitku <span class="mute">v10</span></h1><div class="card">
     <input id="em" type="email" placeholder="Email" autocomplete="email">
     <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
-    <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div>`;
+    <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div></div>`;
 }
 function needCred() { if (!v('em').trim() || v('pw').length < 6) { alert('Isi email dan kata sandi (min. 6 karakter).'); return true; } }
 async function login() {
@@ -124,13 +137,18 @@ const accBal = a => +a.balance + sum(S.tx.filter(t => t.account_id === a.id), 'i
 const savBal = x => sum(S.mv.filter(m => m.saving_id === x.id), 'deposit') - sum(S.mv.filter(m => m.saving_id === x.id), 'withdraw');
 const savTotal = () => S.sav.reduce((t, x) => t + savBal(x), 0);
 const accName = id => (S.acc.find(a => a.id === id) || {}).name || '-';
+const CAT_ICON = { makan: '🍜', makanan: '🍜', minuman: '🥤', transport: '🚗', bensin: '⛽', belanja: '🛍️', gaji: '💰', tagihan: '🧾', listrik: '💡', pulsa: '📱', kesehatan: '💊', cicilan: '🏦', hiburan: '🎬', pendidikan: '📚', hadiah: '🎁', lainnya: '💳' };
+const catIcon = k => CAT_ICON[(k || '').toLowerCase()] || (k ? '💳' : '💳');
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // ---------- Views ----------
 function render() {
   const views = { home, trx, accs, inst, sav };
-  $('app').innerHTML = curBar() + views[S.tab]() + `<nav>${[['home', 'Ringkasan'], ['trx', 'Transaksi'], ['accs', 'Rekening'], ['inst', 'Cicilan'], ['sav', 'Tabungan']]
-    .map(([k, l]) => `<button class="${S.tab === k ? 'on' : ''}" onclick="S.tab='${k}';render()">${l}</button>`).join('')}</nav>`;
+  const tabs = [['home', 'Beranda', '🏠'], ['inst', 'Cicilan', '🏦'], ['fab', '', ''], ['sav', 'Tabungan', '💸'], ['accs', 'Rekening', '🏛️']];
+  const navHtml = `<nav>${tabs.map(([k, l, ic]) => k === 'fab'
+    ? `<button class="fab" onclick="S.tab='trx';render()">+</button>`
+    : `<button class="${S.tab === k ? 'on' : ''}" onclick="S.tab='${k}';render()">${ic} ${l}</button>`).join('')}</nav>`;
+  $('app').innerHTML = (S.tab === 'home' ? views.home() : `<div class="wrap">${curBar()}${views[S.tab]()}</div>`) + navHtml;
 }
 
 function home() {
@@ -144,19 +162,24 @@ function home() {
   const months = [...Array(6)].map((_, i) => { const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1); return ym(d); });
   const data = months.map(k => { const x = S.tx.filter(t => t.date.startsWith(k)); return [k, sum(x, 'income'), sum(x, 'expense')]; });
   const max = Math.max(1, ...data.flatMap(d => [d[1], d[2]]));
-  return `<h1>Ringkasan</h1>
-  <div class="card"><div class="mute">Total saldo semua rekening</div><div class="big">${rp(total)}</div><div class="mute">+ Tabungan ${rp(savTotal())}</div></div>
-  <div class="row"><div class="card" style="flex:1"><div class="mute">Pemasukan bulan ini</div><b class="in">${rp(inc)}</b></div>
-  <div class="card" style="flex:1"><div class="mute">Pengeluaran bulan ini</div><b class="out">${rp(exp)}</b></div></div>
-  <h2>6 bulan terakhir</h2><div class="card"><div class="cols">${data.map(d =>
+  return `<div class="hero"><div class="row"><span class="greet">👋 Ringkasan</span></div>
+    <span class="pill">${now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</span>
+    <div class="mute" style="margin-top:14px">TOTAL SALDO + TABUNGAN</div>
+    <div class="bal">${rp(total + savTotal())}</div>
+    <div class="chips"><div class="chip"><div class="mute" style="color:rgba(255,255,255,.8)">↓ Masuk</div><div class="n">${rp(inc)}</div></div>
+    <div class="chip"><div class="mute" style="color:rgba(255,255,255,.8)">↑ Keluar</div><div class="n">${rp(exp)}</div></div></div></div>
+  <div class="wrap" style="padding-top:60px">${curBar()}
+  <div class="card row"><span class="mute">Saldo rekening</span><b>${rp(total)}</b></div>
+  <div class="card row"><span class="mute">Tabungan</span><b>${rp(savTotal())}</b></div>
+  <h2 style="margin-left:0">6 bulan terakhir</h2><div class="card"><div class="cols">${data.map(d =>
     `<div><span style="height:${d[1] / max * 100}px;background:var(--in)"></span><span style="height:${d[2] / max * 100}px;background:var(--out)"></span><br>${d[0].slice(5)}</div>`).join('')}</div>
   <div class="mute" style="margin-top:8px"><span class="in">■</span> pemasukan &nbsp; <span class="out">■</span> pengeluaran</div></div>
-  <h2>Pengeluaran per kategori (bulan ini)</h2><div class="card">${cats.length ? cats.map(([k, n]) =>
+  <h2 style="margin-left:0">Pengeluaran per kategori (bulan ini)</h2><div class="card">${cats.length ? cats.map(([k, n]) =>
     `<div class="row"><span>${esc(k)}</span><span>${rp(n)}</span></div><div class="bar"><i style="width:${n / exp * 100}%"></i></div>`).join('') : '<span class="mute">Belum ada pengeluaran bulan ini.</span>'}</div>
-  <h2>Unduh data</h2><div class="card"><input id="x_m" type="month" value="${m}">
+  <h2 style="margin-left:0">Unduh data</h2><div class="card"><input id="x_m" type="month" value="${m}">
     <div class="mute" style="margin-bottom:8px">Kosongkan bulan untuk mengunduh semua data.</div>
     <button onclick="exportXlsx()">Unduh Excel (.xlsx)</button></div>
-  <button class="ghost" style="color:var(--mute)" onclick="logout()">Keluar</button>`;
+  <button class="ghost" style="color:var(--mute)" onclick="logout()">Keluar</button></div>`;
 }
 
 function trx() {
@@ -169,9 +192,9 @@ function trx() {
     <input id="t_note" placeholder="Catatan (opsional)">
     <input id="t_date" type="date" value="${today()}">
     <button onclick="addTx()">Simpan transaksi</button></div>
-  ${S.tx.slice(0, 50).map(t => `<div class="card row"><div><b>${esc(t.category || 'Lainnya')}</b> <span class="mute">${esc(t.note || '')}</span>
-    <div class="mute">${t.date} · ${esc(accName(t.account_id))}</div></div>
-    <div><b class="${t.type === 'income' ? 'in' : 'out'}">${t.type === 'income' ? '+' : '-'}${rp(t.amount)}</b>
+  ${S.tx.slice(0, 50).map(t => `<div class="card row"><div class="txitem"><div class="icon">${catIcon(t.category)}</div><div><b>${esc(t.category || 'Lainnya')}</b> <span class="mute">${esc(t.note || '')}</span>
+    <div class="mute">${t.date} · ${esc(accName(t.account_id))}</div></div></div>
+    <div style="text-align:right"><b class="${t.type === 'income' ? 'in' : 'out'}">${t.type === 'income' ? '+' : '-'}${rp(t.amount)}</b><br>
     <button class="ghost" onclick="del('transactions','${t.id}')">Hapus</button></div></div>`).join('') || '<p class="mute">Belum ada transaksi.</p>'}`;
 }
 
