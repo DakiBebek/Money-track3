@@ -70,8 +70,17 @@ async function fetchRates() { // kurs terbaru, dipanggil setiap halaman dibuka
   } catch (e) { /* pakai kurs tersimpan */ }
   if (document.querySelector('nav')) render();
 }
+function parseAmt(raw) { // terima "50.000", "50,000", "50000", "12.5" dsb
+  let s = String(raw || '').trim().replace(/\s/g, '').replace(/,/g, '.');
+  if (!s) return 0;
+  const parts = s.split('.');
+  if (parts.length > 2) { s = parts.slice(0, -1).join('') + '.' + parts[parts.length - 1]; }
+  if (['IDR', 'JPY'].includes(CUR)) s = s.replace(/\./g, ''); // IDR/JPY tidak punya desimal, titik = pemisah ribuan
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
 function inIDR(id) { // baca input dalam mata uang terpilih, kembalikan Rupiah (null = kurs belum ada)
-  const x = parseFloat(v(id));
+  const x = parseAmt(v(id));
   if (!x) return 0;
   if (CUR === 'IDR') return x;
   const r = RATES[CUR];
@@ -109,7 +118,7 @@ async function load() {
 
 // ---------- Auth ----------
 function authView() {
-  $('app').innerHTML = `<div class="wrap"><h1>Duitku <span class="mute">v11</span></h1><div class="card">
+  $('app').innerHTML = `<div class="wrap"><h1>Duitku <span class="mute">v12</span></h1><div class="card">
     <input id="em" type="email" placeholder="Email" autocomplete="email">
     <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
     <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div></div>`;
@@ -188,7 +197,7 @@ function trx() {
   return `<h1>Transaksi</h1><div class="card">
     <select id="t_type"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select>
     <select id="t_acc">${accOpts()}</select>
-    <input id="t_amt" type="number" step="any" inputmode="decimal" placeholder="Jumlah (${CUR})">
+    <input id="t_amt" type="text" inputmode="decimal" placeholder="Jumlah (${CUR}), contoh 50.000">
     <input id="t_cat" placeholder="Kategori (makan, gaji, transport...)">
     <input id="t_note" placeholder="Catatan (opsional)">
     <input id="t_date" type="date" value="${today()}">
@@ -202,7 +211,7 @@ function trx() {
 function accs() {
   return `<h1>Rekening</h1><div class="card">
     <input id="a_name" placeholder="Nama rekening (BCA, Dompet, GoPay...)">
-    <input id="a_bal" type="number" step="any" inputmode="decimal" placeholder="Saldo awal (${CUR})">
+    <input id="a_bal" type="text" inputmode="decimal" placeholder="Saldo awal (${CUR})">
     <button onclick="addAcc()">Tambah rekening</button></div>
   ${S.acc.map(a => `<div class="card row"><div><b>${esc(a.name)}</b><div class="big">${rp(accBal(a))}</div></div>
     <button class="ghost" onclick="del('accounts','${a.id}')">Hapus</button></div>`).join('')}`;
@@ -222,7 +231,7 @@ function inst() {
   return `<h1>Cicilan</h1>
   <div class="card"><div class="mute">Total sisa semua cicilan</div><div class="big out">${rp(tot)}</div></div>
   ${S.acc.length ? `<div class="card"><input id="i_name" placeholder="Nama cicilan (HP, motor...)">
-    <input id="i_amt" type="number" step="any" inputmode="decimal" placeholder="Cicilan per bulan (${CUR})">
+    <input id="i_amt" type="text" inputmode="decimal" placeholder="Cicilan per bulan (${CUR})">
     <input id="i_tot" type="number" inputmode="numeric" placeholder="Total bulan">
     <input id="i_paid" type="number" inputmode="numeric" placeholder="Sudah dibayar berapa bulan (opsional)">
     <select id="i_acc">${accOpts()}</select><button onclick="addInst()">Tambah cicilan</button></div>` : '<div class="card">Tambah rekening dulu.</div>'}
@@ -256,14 +265,14 @@ function sav() {
     return `<div class="card"><div class="row"><b>${esc(x.name)}</b><button class="ghost" onclick="del('savings','${x.id}')">Hapus</button></div>
       <div class="big">${rp(b)}</div>
       ${x.target ? `<div class="bar"><i style="width:${pct}%"></i></div><div class="mute">Target ${rp(x.target)} · ${Math.round(pct)}% · kurang ${rp(Math.max(0, x.target - b))}</div>` : ''}
-      <input id="m_amt_${x.id}" type="number" step="any" inputmode="decimal" placeholder="Jumlah (${CUR})">
+      <input id="m_amt_${x.id}" type="text" inputmode="decimal" placeholder="Jumlah (${CUR})">
       <div class="row"><button onclick="move('${x.id}','add')">Tambah dana</button><button onclick="move('${x.id}','set')">Set jumlah</button></div>
       ${S.acc.length ? `<div class="mute" style="margin-top:10px">Pindahkan ke rekening</div><select id="m_acc_${x.id}">${accOpts()}</select>
       <div class="row"><button onclick="move('${x.id}','withdraw')">Tarik ke rekening</button><button class="ghost" style="color:var(--mute)" onclick="move('${x.id}','withdraw',true)">Tarik semua</button></div>` : '<div class="mute" style="margin-top:8px">Tambah rekening untuk bisa menarik dana ke rekening.</div>'}</div>`;
   }).join('') || '<p class="mute">Belum ada tabungan.</p>';
   return `<h1>Tabungan</h1><div class="card"><div class="mute">Total semua tabungan</div><div class="big">${rp(savTotal())}</div></div>
   <div class="card"><input id="s_name" placeholder="Nama tabungan (Dana darurat, Liburan...)">
-    <input id="s_tgt" type="number" step="any" inputmode="decimal" placeholder="Target (${CUR}, opsional)">
+    <input id="s_tgt" type="text" inputmode="decimal" placeholder="Target (${CUR}, opsional)">
     <button onclick="addSav()">Tambah tabungan</button></div>${list}`;
 }
 
