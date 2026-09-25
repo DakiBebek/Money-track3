@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Duitku</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
 :root{--bg:#eef1f8;--card:#fff;--ink:#151a30;--mute:#7c85a3;--line:#e4e8f5;--main:#3956f5;--main2:#2540d6;--in:#1fa15c;--out:#e5533d;--hero1:#3956f5;--hero2:#2135b8;--hero-ink:#fff;--hero-mute:rgba(255,255,255,.75);--hero-chip:rgba(255,255,255,.14);--hero-border:none;--font:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
 @media(prefers-color-scheme:dark){:root:not([data-theme]){--bg:#0d1020;--card:#161b34;--ink:#eef0fb;--mute:#8992b8;--line:#262c4c;--main:#5b7bff;--main2:#3956f5;--in:#33c281;--out:#ff6b53;--hero1:#2135b8;--hero2:#131f80}}
@@ -154,7 +154,7 @@ async function load() {
 
 // ---------- Auth ----------
 function authView() {
-  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v14</span></h1><div class="card">
+  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v15</span></h1><div class="card">
     <input id="em" type="email" placeholder="Email" autocomplete="email">
     <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
     <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div></div>`;
@@ -275,24 +275,75 @@ function inst() {
 }
 
 // ---------- Export ----------
-function exportXlsx() {
-  if (typeof XLSX === 'undefined') return alert('Library Excel belum termuat. Cek koneksi lalu coba lagi.');
+async function exportXlsx() {
+  if (typeof ExcelJS === 'undefined') return alert('Library Excel belum termuat. Cek koneksi lalu coba lagi.');
   const m = v('x_m'), cur = RATES[CUR] ? CUR : 'IDR', cv = n => +(n * RATES[cur]).toFixed(2);
+  const fmt = cur === 'IDR' || cur === 'JPY' ? '#,##0' : '#,##0.00';
   const tx = S.tx.filter(t => !m || t.date.startsWith(m)).sort((a, b) => a.date.localeCompare(b.date));
-  const cat = {};
-  tx.filter(t => t.type === 'expense').forEach(t => { const k = t.category || 'Lainnya'; cat[k] = (cat[k] || 0) + +t.amount; });
   const inc = sum(tx, 'income'), exp = sum(tx, 'expense');
-  const ringkas = [['Periode', m || 'Semua bulan'], ['Mata uang', cur], ['Pemasukan', cv(inc)], ['Pengeluaran', cv(exp)], ['Selisih', cv(inc - exp)], [],
-    ['Kategori pengeluaran', 'Jumlah'], ...Object.entries(cat).sort((a, b) => b[1] - a[1]).map(([k, n]) => [k, cv(n)])];
-  const rows = tx.map(t => ({ Tanggal: t.date, Rekening: accName(t.account_id), Tipe: t.type === 'income' ? 'Pemasukan' : 'Pengeluaran', Kategori: t.category || 'Lainnya', Catatan: t.note || '', ['Jumlah (' + cur + ')']: cv(t.amount) }));
-  const cic = S.inst.map(i => ({ Cicilan: i.name, Rekening: accName(i.account_id), ['Per bulan (' + cur + ')']: cv(i.monthly_amount), 'Total bulan': i.total_months, 'Bulan terbayar': i.paid_months, 'Sisa bulan': i.total_months - i.paid_months, ['Sudah dibayar (' + cur + ')']: cv(i.paid_months * i.monthly_amount), ['Sisa (' + cur + ')']: cv((i.total_months - i.paid_months) * i.monthly_amount) }));
-  const tab = S.sav.map(x => ({ Tabungan: x.name, ['Target (' + cur + ')']: x.target ? cv(x.target) : '', ['Saldo (' + cur + ')']: cv(savBal(x)) }));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ringkas), 'Ringkasan');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Transaksi');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(cic), 'Cicilan');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(tab), 'Tabungan');
-  XLSX.writeFile(wb, 'duitku-' + (m || 'semua') + '.xlsx');
+  const periode = m ? new Date(m + '-02').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : 'Semua periode';
+  const wb = new ExcelJS.Workbook();
+  const GREEN = 'FF1D9A5F', RED = 'FFD9463A', BLUE = 'FF2F6FE4', DARK = 'FF1F2937', LIGHT = 'FFF3F4F6', WHITE = 'FFFFFFFF';
+  const fill = c => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: c } });
+  const thin = { style: 'thin', color: { argb: 'FFD1D5DB' } };
+  const box = { top: thin, bottom: thin, left: thin, right: thin };
+
+  // ---- Sheet Ringkasan ----
+  const r = wb.addWorksheet('Ringkasan');
+  r.columns = [{ width: 14 }, { width: 22 }, { width: 16 }, { width: 30 }, { width: 16 }, { width: 16 }];
+  r.mergeCells('A1:F1'); r.getCell('A1').value = 'CATATAN KEUANGAN'; r.getCell('A1').font = { bold: true, size: 18, color: { argb: DARK } }; r.getCell('A1').alignment = { horizontal: 'center' };
+  r.mergeCells('A2:F2'); r.getCell('A2').value = 'Periode: ' + periode + '  ·  Mata uang: ' + cur; r.getCell('A2').font = { italic: true, color: { argb: 'FF6B7280' } }; r.getCell('A2').alignment = { horizontal: 'center' };
+  r.getRow(1).height = 26;
+
+  const boxRow = 4;
+  [['PEMASUKAN', inc, GREEN, 'A'], ['PENGELUARAN', exp, RED, 'C'], ['SALDO', inc - exp, BLUE, 'E']].forEach(([label, val, color, col]) => {
+    const c1 = col + boxRow, c2 = String.fromCharCode(col.charCodeAt(0) + 1) + boxRow;
+    r.mergeCells(c1 + ':' + c2); const cell = r.getCell(c1);
+    cell.value = { richText: [{ font: { bold: true, size: 10, color: { argb: WHITE } }, text: label + '\n' }, { font: { bold: true, size: 15, color: { argb: WHITE } }, text: cur + ' ' + val.toLocaleString('id-ID', { maximumFractionDigits: 2 }) }] };
+    cell.fill = fill(color); cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    r.getRow(boxRow).height = 40;
+  });
+
+  const head = boxRow + 2;
+  ['Tanggal', 'Rekening', 'Tipe', 'Kategori / Catatan', 'Pemasukan', 'Pengeluaran'].forEach((h, i) => {
+    const cell = r.getCell(head, i + 1); cell.value = h; cell.font = { bold: true, color: { argb: WHITE } }; cell.fill = fill(DARK); cell.alignment = { horizontal: 'center' }; cell.border = box;
+  });
+  tx.forEach((t, i) => {
+    const row = head + 1 + i, isInc = t.type === 'income';
+    const vals = [t.date, accName(t.account_id), isInc ? 'Masuk' : 'Keluar', (t.category || 'Lainnya') + (t.note ? ' — ' + t.note : ''), isInc ? cv(t.amount) : null, !isInc ? cv(t.amount) : null];
+    vals.forEach((val, ci) => {
+      const cell = r.getCell(row, ci + 1); cell.value = val; cell.border = box;
+      if (ci >= 4 && val !== null) { cell.numFmt = fmt; cell.font = { color: { argb: isInc ? GREEN : RED }, bold: true }; }
+      if (i % 2 === 1) cell.fill = fill(LIGHT);
+    });
+  });
+  const totalRow = head + 1 + tx.length;
+  r.mergeCells('A' + totalRow + ':D' + totalRow); r.getCell('A' + totalRow).value = 'Total'; r.getCell('A' + totalRow).font = { bold: true };
+  r.getCell('E' + totalRow).value = cv(inc); r.getCell('F' + totalRow).value = cv(exp);
+  ['A', 'E', 'F'].forEach(c => { const cell = r.getCell(c + totalRow); cell.border = box; cell.font = { bold: true }; cell.fill = fill(LIGHT); if (c !== 'A') cell.numFmt = fmt; });
+  if (!tx.length) { r.mergeCells('A' + (head + 1) + ':F' + (head + 1)); r.getCell('A' + (head + 1)).value = 'Belum ada transaksi pada periode ini.'; r.getCell('A' + (head + 1)).alignment = { horizontal: 'center' }; r.getCell('A' + (head + 1)).font = { italic: true, color: { argb: 'FF9CA3AF' } }; }
+
+  // ---- Sheet Kategori ----
+  const kat = wb.addWorksheet('Kategori'); kat.columns = [{ width: 24 }, { width: 18 }];
+  ['Kategori Pengeluaran', 'Jumlah'].forEach((h, i) => { const c = kat.getCell(1, i + 1); c.value = h; c.font = { bold: true, color: { argb: WHITE } }; c.fill = fill(DARK); c.border = box; });
+  const catTot = {}; tx.filter(t => t.type === 'expense').forEach(t => { const k = t.category || 'Lainnya'; catTot[k] = (catTot[k] || 0) + +t.amount; });
+  Object.entries(catTot).sort((a, b) => b[1] - a[1]).forEach(([k, n], i) => {
+    kat.getCell(i + 2, 1).value = k; kat.getCell(i + 2, 2).value = cv(n); kat.getCell(i + 2, 2).numFmt = fmt;
+    [1, 2].forEach(ci => { const c = kat.getCell(i + 2, ci); c.border = box; if (i % 2 === 1) c.fill = fill(LIGHT); });
+  });
+
+  // ---- Sheet Cicilan ----
+  const c2 = wb.addWorksheet('Cicilan'); c2.columns = [{ width: 20 }, { width: 18 }, { width: 14 }, { width: 12 }, { width: 12 }, { width: 16 }, { width: 16 }];
+  ['Cicilan', 'Rekening', 'Per bulan', 'Total bln', 'Terbayar', 'Sudah dibayar', 'Sisa'].forEach((h, i) => { const cell = c2.getCell(1, i + 1); cell.value = h; cell.font = { bold: true, color: { argb: WHITE } }; cell.fill = fill(DARK); cell.border = box; });
+  S.inst.forEach((x, i) => {
+    const row = i + 2, left = x.total_months - x.paid_months;
+    const vals = [x.name, accName(x.account_id), cv(x.monthly_amount), x.total_months, x.paid_months, cv(x.paid_months * x.monthly_amount), cv(left * x.monthly_amount)];
+    vals.forEach((val, ci) => { const cell = c2.getCell(row, ci + 1); cell.value = val; cell.border = box; if ([2, 5, 6].includes(ci)) cell.numFmt = fmt; if (i % 2 === 1) cell.fill = fill(LIGHT); });
+  });
+
+  const buf = await wb.xlsx.writeBuffer();
+  const url = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  const a = document.createElement('a'); a.href = url; a.download = 'duitku-' + (m || 'semua') + '.xlsx'; a.click(); URL.revokeObjectURL(url);
 }
 
 function sav() {
