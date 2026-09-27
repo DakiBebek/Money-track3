@@ -2,8 +2,16 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Duitku</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<meta name="theme-color" content="#3956f5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Duitku">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
@@ -36,6 +44,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .chips{display:flex;gap:8px}
 .chip{flex:1;background:var(--hero-chip);border-radius:14px;padding:12px}
 .chip .n{font-weight:700;font-size:15px}
+.qa{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 4px;-webkit-overflow-scrolling:touch}
+.qa::-webkit-scrollbar{display:none}
+.qaItem{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11.5px;color:var(--ink);background:none;border:0;flex:0 0 auto;width:68px;font-weight:600;font-family:var(--font)}
+.qaIcon{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:21px}
 .gear{position:fixed;top:14px;right:14px;z-index:30;width:38px;height:38px;border-radius:50%;background:var(--hero-chip);color:var(--hero-ink);display:flex;align-items:center;justify-content:center;font-size:18px;border:0;padding:0;cursor:pointer}
 .wrap .gear{position:absolute;top:16px;background:var(--card);color:var(--ink);border:1px solid var(--line)}
 .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40;display:flex;align-items:flex-end}
@@ -154,7 +166,7 @@ async function load() {
 
 // ---------- Auth ----------
 function authView() {
-  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v15</span></h1><div class="card">
+  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v18</span></h1><div class="card">
     <input id="em" type="email" placeholder="Email" autocomplete="email">
     <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
     <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div></div>`;
@@ -207,16 +219,14 @@ function home() {
   const months = [...Array(6)].map((_, i) => { const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1); return ym(d); });
   const data = months.map(k => { const x = S.tx.filter(t => t.date.startsWith(k)); return [k, sum(x, 'income'), sum(x, 'expense')]; });
   const max = Math.max(1, ...data.flatMap(d => [d[1], d[2]]));
-  return `<div class="hero"><div class="row"><span class="greet">👋 Ringkasan</span><button class="gear" onclick="toggleThemeSheet(true)">⚙️</button></div>
+  return `<div class="hero"><div class="row"><span class="greet">Ringkasan</span><button class="gear" onclick="toggleThemeSheet(true)">⚙️</button></div>
     <span class="pill">${now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</span>
     <div class="mute" style="margin-top:14px">TOTAL SALDO</div>
     <div class="bal">${rp(total)}</div>
     <div class="mute">+ Tabungan ${rp(savTotal())}</div>
     <div class="chips"><div class="chip"><div class="mute">↓ Masuk</div><div class="n">${rp(inc)}</div></div>
     <div class="chip"><div class="mute">↑ Keluar</div><div class="n">${rp(exp)}</div></div></div></div>
-  <div class="wrap" style="padding-top:60px">${curBar()}
-  <div class="card row"><span class="mute">Saldo rekening</span><b>${rp(total)}</b></div>
-  <div class="card row"><span class="mute">Tabungan</span><b>${rp(savTotal())}</b></div>
+  <div class="wrap" style="padding-top:60px">
   <h2 style="margin-left:0">6 bulan terakhir</h2><div class="card"><div class="cols">${data.map(d =>
     `<div><span style="height:${d[1] / max * 100}px;background:var(--in)"></span><span style="height:${d[2] / max * 100}px;background:var(--out)"></span><br>${d[0].slice(5)}</div>`).join('')}</div>
   <div class="mute" style="margin-top:8px"><span class="in">■</span> pemasukan &nbsp; <span class="out">■</span> pengeluaran</div></div>
@@ -419,6 +429,7 @@ async function del(table, id) {
 }
 fetchRates();
 boot();
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {})); }
 </script>
 </body>
 </html>
