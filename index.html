@@ -40,6 +40,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .hero .greet{font-size:20px;font-weight:800}
 .hero .mute{color:var(--hero-mute)}
 .hero .pill{display:inline-block;background:var(--hero-chip);padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;margin-top:10px}
+.monthNav{background:var(--hero-chip);color:var(--hero-ink);width:34px;height:34px;border-radius:50%;padding:0;font-size:18px;margin-top:10px;line-height:1}
+.monthNav:disabled{opacity:.35}
 .hero .bal{font-size:34px;font-weight:800;margin:6px 0 12px}
 .chips{display:flex;gap:8px}
 .chip{flex:1;background:var(--hero-chip);border-radius:14px;padding:12px}
@@ -119,7 +121,8 @@ function curBar() {
 const today = () => new Date().toLocaleDateString('en-CA');
 const ym = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
 const sum = (a, t) => a.filter(x => x.type === t).reduce((s, x) => s + +x.amount, 0);
-let S = { acc: [], tx: [], inst: [], sav: [], mv: [], tab: 'home' };
+function shiftMonth(m, n) { const [y, mo] = m.split('-').map(Number); const d = new Date(y, mo - 1 + n, 1); return ym(d); }
+let S = { acc: [], tx: [], inst: [], sav: [], mv: [], tab: 'home', month: ym(new Date()) };
 const THEMES = {
   modern: { label: 'Modern (Biru)', swatch: '#3956f5', vars: { '--bg': '#eef1f8', '--card': '#fff', '--ink': '#151a30', '--mute': '#7c85a3', '--line': '#e4e8f5', '--main': '#3956f5', '--main2': '#2540d6', '--in': '#1fa15c', '--out': '#e5533d', '--hero1': '#3956f5', '--hero2': '#2135b8', '--hero-ink': '#fff', '--hero-mute': 'rgba(255,255,255,.75)', '--hero-chip': 'rgba(255,255,255,.14)', '--hero-border': 'none', '--font': "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" } },
   klasik: { label: 'Klasik (Hijau)', swatch: '#1f6b4a', vars: { '--bg': '#f3f6f2', '--card': '#fff', '--ink': '#16241c', '--mute': '#66756b', '--line': '#dbe4dc', '--main': '#1f6b4a', '--main2': '#18563b', '--in': '#1f6b4a', '--out': '#c2452d', '--hero1': '#fff', '--hero2': '#fff', '--hero-ink': '#16241c', '--hero-mute': '#66756b', '--hero-chip': '#f3f6f2', '--hero-border': '1px solid #dbe4dc', '--font': "Georgia,'Times New Roman',serif" } },
@@ -136,6 +139,8 @@ function applyTheme(name) {
 try { applyTheme(localStorage.getItem('theme') || 'modern'); } catch (e) { applyTheme('modern'); }
 let showThemeSheet = false;
 function toggleThemeSheet(v) { showThemeSheet = v; render(); }
+function changeMonth(n) { S.month = shiftMonth(S.month, n); render(); }
+function pickMonth(el) { S.month = el.value; render(); }
 function pickTheme(name) { applyTheme(name); render(); }
 function themeSheetHtml() {
   if (!showThemeSheet) return '';
@@ -166,7 +171,7 @@ async function load() {
 
 // ---------- Auth ----------
 function authView() {
-  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v18</span></h1><div class="card">
+  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v19</span></h1><div class="card">
     <input id="em" type="email" placeholder="Email" autocomplete="email">
     <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
     <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div></div>`;
@@ -209,18 +214,26 @@ function render() {
 }
 
 function home() {
-  const now = new Date(), m = ym(now);
+  const m = S.month, thisMonth = ym(new Date());
   const cur = S.tx.filter(t => t.date.startsWith(m));
   const inc = sum(cur, 'income'), exp = sum(cur, 'expense');
   const total = S.acc.reduce((s, a) => s + accBal(a), 0);
   const cat = {};
   cur.filter(t => t.type === 'expense').forEach(t => { const k = t.category || 'Lainnya'; cat[k] = (cat[k] || 0) + +t.amount; });
   const cats = Object.entries(cat).sort((a, b) => b[1] - a[1]);
-  const months = [...Array(6)].map((_, i) => { const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1); return ym(d); });
+  const months = [...Array(6)].map((_, i) => shiftMonth(m, i - 5));
   const data = months.map(k => { const x = S.tx.filter(t => t.date.startsWith(k)); return [k, sum(x, 'income'), sum(x, 'expense')]; });
   const max = Math.max(1, ...data.flatMap(d => [d[1], d[2]]));
+  const label = new Date(m + '-02').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
   return `<div class="hero"><div class="row"><span class="greet">Ringkasan</span><button class="gear" onclick="toggleThemeSheet(true)">⚙️</button></div>
-    <span class="pill">${now.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</span>
+    <div class="row" style="gap:8px">
+      <button class="monthNav" onclick="changeMonth(-1)">‹</button>
+      <label class="pill" style="position:relative;cursor:pointer">${label}
+        <input type="month" value="${m}" onchange="pickMonth(this)" style="position:absolute;inset:0;opacity:0;border:0;padding:0">
+      </label>
+      <button class="monthNav" onclick="changeMonth(1)" ${m >= thisMonth ? 'disabled' : ''}>›</button>
+    </div>
+    ${m !== thisMonth ? `<div class="mute" style="margin-top:4px">Sedang melihat bulan lalu · <a href="#" onclick="S.month=thisMonth;render();return false" style="color:var(--hero-ink)">kembali ke bulan ini</a></div>` : ''}
     <div class="mute" style="margin-top:14px">TOTAL SALDO</div>
     <div class="bal">${rp(total)}</div>
     <div class="mute">+ Tabungan ${rp(savTotal())}</div>
@@ -230,7 +243,7 @@ function home() {
   <h2 style="margin-left:0">6 bulan terakhir</h2><div class="card"><div class="cols">${data.map(d =>
     `<div><span style="height:${d[1] / max * 100}px;background:var(--in)"></span><span style="height:${d[2] / max * 100}px;background:var(--out)"></span><br>${d[0].slice(5)}</div>`).join('')}</div>
   <div class="mute" style="margin-top:8px"><span class="in">■</span> pemasukan &nbsp; <span class="out">■</span> pengeluaran</div></div>
-  <h2 style="margin-left:0">Pengeluaran per kategori (bulan ini)</h2><div class="card">${cats.length ? cats.map(([k, n]) =>
+  <h2 style="margin-left:0">Pengeluaran per kategori (${label})</h2><div class="card">${cats.length ? cats.map(([k, n]) =>
     `<div class="row"><span>${esc(k)}</span><span>${rp(n)}</span></div><div class="bar"><i style="width:${n / exp * 100}%"></i></div>`).join('') : '<span class="mute">Belum ada pengeluaran bulan ini.</span>'}</div>
   <h2 style="margin-left:0">Unduh data</h2><div class="card"><input id="x_m" type="month" value="${m}">
     <div class="mute" style="margin-bottom:8px">Kosongkan bulan untuk mengunduh semua data.</div>
