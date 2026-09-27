@@ -14,6 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="Duitku">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
 <style>
 :root{--bg:#eef1f8;--card:#fff;--ink:#151a30;--mute:#7c85a3;--line:#e4e8f5;--main:#3956f5;--main2:#2540d6;--in:#1fa15c;--out:#e5533d;--hero1:#3956f5;--hero2:#2135b8;--hero-ink:#fff;--hero-mute:rgba(255,255,255,.75);--hero-chip:rgba(255,255,255,.14);--hero-border:none;--font:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
 @media(prefers-color-scheme:dark){:root:not([data-theme]){--bg:#0d1020;--card:#161b34;--ink:#eef0fb;--mute:#8992b8;--line:#262c4c;--main:#5b7bff;--main2:#3956f5;--in:#33c281;--out:#ff6b53;--hero1:#2135b8;--hero2:#131f80}}
@@ -53,6 +54,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .gear{position:fixed;top:14px;right:14px;z-index:30;width:38px;height:38px;border-radius:50%;background:var(--hero-chip);color:var(--hero-ink);display:flex;align-items:center;justify-content:center;font-size:18px;border:0;padding:0;cursor:pointer}
 .wrap .gear{position:absolute;top:16px;background:var(--card);color:var(--ink);border:1px solid var(--line)}
 .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40;display:flex;align-items:flex-end}
+.scanBtn{width:100%;background:var(--bg);color:var(--ink);border:1px dashed var(--line);text-align:center}
+.scanRaw{max-height:120px;overflow:auto;background:var(--bg);border-radius:10px;padding:8px;font-size:11px;white-space:pre-wrap;color:var(--mute)}
 .sheet{background:var(--card);color:var(--ink);width:100%;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
 .sheet h3{margin:0 0 12px;font-size:17px}
 .theme-opt{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer}
@@ -171,7 +174,7 @@ async function load() {
 
 // ---------- Auth ----------
 function authView() {
-  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v19</span></h1><div class="card">
+  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v20</span></h1><div class="card">
     <input id="em" type="email" placeholder="Email" autocomplete="email">
     <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
     <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div></div>`;
@@ -254,6 +257,9 @@ function home() {
 function trx() {
   if (!S.acc.length) return `<h1>Transaksi</h1><div class="card">Tambah rekening dulu di tab Rekening.</div>`;
   return `<h1>Transaksi</h1><div class="card">
+    <button class="scanBtn" onclick="document.getElementById('scanFile').click()">📷 Scan Struk</button>
+    <input id="scanFile" type="file" accept="image/*" capture="environment" style="display:none" onchange="scanReceipt(this.files[0])">
+    <div id="scanStatus"></div>
     <select id="t_type"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select>
     <select id="t_acc">${accOpts()}</select>
     <input id="t_amt" type="text" inputmode="decimal" placeholder="Jumlah (${CUR}), contoh 50.000">
@@ -384,6 +390,42 @@ function sav() {
   <div class="card"><input id="s_name" placeholder="Nama tabungan (Dana darurat, Liburan...)">
     <input id="s_tgt" type="text" inputmode="decimal" placeholder="Target (${CUR}, opsional)">
     <button onclick="addSav()">Tambah tabungan</button></div>${list}`;
+}
+
+// ---------- Scan struk (OCR di browser) ----------
+async function scanReceipt(file) {
+  if (!file) return;
+  if (typeof Tesseract === 'undefined') return alert('Library scan belum termuat. Cek koneksi lalu coba lagi.');
+  const box = $('scanStatus');
+  box.innerHTML = '<div class="mute" style="margin:6px 0">⏳ Membaca struk... (bisa 10-30 detik)</div>';
+  try {
+    const { data } = await Tesseract.recognize(file, 'ind+eng');
+    const text = data.text || '';
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+    // Cari nominal total: baris mengandung kata kunci total/bayar, ambil angka terbesar di baris itu
+    const numRe = /(\d[\d.,]{2,})/g;
+    const toNum = raw => parseAmt(raw.replace(/[^\d.,]/g, ''));
+    let best = 0;
+    const kwRe = /(grand\s*total|total\s*bayar|total|jumlah|bayar|tunai|cash)/i;
+    lines.forEach(l => { if (kwRe.test(l)) { const m = l.match(numRe); if (m) { const n = Math.max(...m.map(toNum)); if (n > best) best = n; } } });
+    if (!best) { const all = (text.match(numRe) || []).map(toNum).filter(n => n > 100); if (all.length) best = Math.max(...all); }
+
+    // Tanggal: dd/mm/yyyy, dd-mm-yyyy, atau yyyy-mm-dd
+    let dateVal = '';
+    const dm = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+    if (dm) { let [, d, mo, y] = dm; if (y.length === 2) y = '20' + y; if (+d <= 31 && +mo <= 12) dateVal = y + '-' + mo.padStart(2, '0') + '-' + d.padStart(2, '0'); }
+
+    const merchant = lines.find(l => l.length > 2 && !/^\d/.test(l)) || '';
+
+    if (best) $('t_amt').value = String(Math.round(best));
+    if (merchant) $('t_note').value = merchant.slice(0, 60);
+    if (dateVal) $('t_date').value = dateVal;
+    box.innerHTML = (best ? '<div class="mute" style="margin:6px 0">✅ Terdeteksi: ' + rp(best) + '. Cek dulu sebelum simpan.</div>' : '<div class="mute" style="margin:6px 0">⚠️ Jumlah tidak terbaca otomatis, isi manual ya.</div>') +
+      '<details style="margin-bottom:8px"><summary class="mute" style="cursor:pointer">Lihat teks hasil scan</summary><div class="scanRaw">' + esc(text || '(kosong)') + '</div></details>';
+  } catch (e) {
+    box.innerHTML = '<div class="mute" style="margin:6px 0">⚠️ Gagal membaca struk (' + esc(e.message || e) + '). Isi manual ya.</div>';
+  }
 }
 
 // ---------- Actions ----------
