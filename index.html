@@ -247,7 +247,7 @@ async function load() {
 
 // ---------- Auth ----------
 function authView() {
-  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v26</span></h1><div class="card">
+  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v27</span></h1><div class="card">
     <input id="em" type="email" placeholder="Email" autocomplete="email">
     <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
     <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div></div>`;
@@ -286,7 +286,7 @@ function render() {
   const navHtml = `<nav>${tabs.map(([k, l, ic]) => k === 'fab'
     ? `<button class="fab" onclick="toggleAddSheet(true)">+</button>`
     : `<button class="${S.tab === k ? 'on' : ''}" onclick="S.tab='${k}';render()">${ic} ${l}</button>`).join('')}</nav>`;
-  $('app').innerHTML = (S.tab === 'home' ? views.home() : `<div class="wrap" style="position:relative"><button class="gear" style="right:16px" onclick="toggleThemeSheet(true)">⚙️</button>${curBar()}${views[S.tab]()}</div>`) + navHtml + themeSheetHtml() + addSheetHtml();
+  $('app').innerHTML = (S.tab === 'home' ? views.home() : `<div class="wrap">${curBar()}${views[S.tab]()}</div>`) + navHtml + themeSheetHtml() + addSheetHtml();
 }
 
 function home() {
