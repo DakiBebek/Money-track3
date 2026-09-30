@@ -247,7 +247,7 @@ async function load() {
 
 // ---------- Auth ----------
 function authView() {
-  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v27</span></h1><div class="card">
+  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v28</span></h1><div class="card">
     <input id="em" type="email" placeholder="Email" autocomplete="email">
     <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
     <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div></div>`;
@@ -316,7 +316,9 @@ function home() {
     <div class="chips"><div class="chip"><div class="mute">↓ Masuk</div><div class="n">${rp(inc)}</div></div>
     <div class="chip"><div class="mute">↑ Keluar</div><div class="n">${rp(exp)}</div></div></div></div>
   <div class="wrap" style="padding-top:60px">
-  <h2 style="margin-left:0">6 bulan terakhir</h2><div class="card"><div class="cols">${data.map(d =>
+  <h2 style="margin-left:0">6 bulan terakhir</h2><div class="card" style="cursor:pointer" onclick="S.tab='trx';render()">
+  <div class="row" style="margin-bottom:2px"><span class="mute">Lihat semua riwayat transaksi</span><span class="mute">›</span></div>
+  <div class="cols">${data.map(d =>
     `<div><span style="height:${d[1] / max * 100}px;background:var(--in)"></span><span style="height:${d[2] / max * 100}px;background:var(--out)"></span><br>${d[0].slice(5)}</div>`).join('')}</div>
   <div class="mute" style="margin-top:8px"><span class="in">■</span> pemasukan &nbsp; <span class="out">■</span> pengeluaran</div></div>
   <h2 style="margin-left:0">Pengeluaran per kategori (${label})</h2><div class="card">${cats.length ? cats.map(([k, n]) =>
