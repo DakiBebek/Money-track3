@@ -119,6 +119,11 @@ function inIDR(id) { // baca input dalam mata uang terpilih, kembalikan Rupiah (
   return Math.round(x / r);
 }
 function setCur(c) { CUR = c; try { localStorage.setItem('cur', c); } catch (e) {} render(); }
+function toCurVal(idr) {
+  if (CUR === 'IDR' || !RATES[CUR]) return Math.round(idr);
+  const x = idr * RATES[CUR];
+  return ['IDR', 'JPY'].includes(CUR) ? Math.round(x) : +x.toFixed(2);
+}
 function curBar() {
   const r = RATES[CUR], t = RATE_T ? new Date(RATE_T).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' }) : '';
   const info = CUR === 'IDR' ? 'Semua jumlah dalam Rupiah' : r ? `1 ${CUR} = Rp${(1 / r).toLocaleString('id-ID', { maximumFractionDigits: 2 })} · kurs ${t} · input dalam ${CUR}` : 'Kurs belum tersedia, tampil dalam Rupiah';
@@ -144,53 +149,78 @@ function applyTheme(name) {
 }
 try { applyTheme(localStorage.getItem('theme') || 'modern'); } catch (e) { applyTheme('modern'); }
 let showThemeSheet = false, CURRENT_USER = null;
-let showAddSheet = false, addMode = null;
-function toggleAddSheet(v) { showAddSheet = v; if (!v) addMode = null; render(); }
-function goAdd(mode) { addMode = mode; render(); }
+let showAddSheet = false, addMode = null, editing = null;
+function toggleAddSheet(v) { showAddSheet = v; if (!v) { addMode = null; editing = null; } render(); }
+function goAdd(mode) { editing = null; addMode = mode; render(); }
+function editRow(table, id) {
+  editing = { table, id };
+  addMode = { transactions: 'trx', installments: 'inst', savings: 'sav', accounts: 'accs' }[table];
+  showAddSheet = true; render();
+}
 function addSheetHtml() {
   if (!showAddSheet) return '';
   if (!addMode) {
-    const opts = [['trx', '💸', 'Transaksi', 'Catat pemasukan / pengeluaran'], ['inst', '🏦', 'Cicilan', 'Tambah cicilan baru'], ['sav', '💰', 'Tabungan', 'Buat atau isi tabungan'], ['accs', '🏛️', 'Rekening', 'Tambah rekening baru']];
+    const opts = [['trx', '💸', 'Transaksi', 'Catat pemasukan / pengeluaran'], ['transfer', '🔁', 'Transfer', 'Pindah saldo antar rekening'], ['inst', '🏦', 'Cicilan', 'Tambah cicilan baru'], ['sav', '💰', 'Tabungan', 'Buat atau isi tabungan'], ['accs', '🏛️', 'Rekening', 'Tambah rekening baru']];
     return `<div class="sheet-bg" onclick="if(event.target===this)toggleAddSheet(false)"><div class="sheet"><h3>Mau tambah apa?</h3>
       ${opts.map(([k, ic, l, d]) => `<div class="theme-opt" onclick="goAdd('${k}')"><div class="icon" style="background:var(--bg)">${ic}</div><div><b>${l}</b><div class="mute">${d}</div></div></div>`).join('')}
       <button style="width:100%;margin-top:12px;background:var(--bg);color:var(--ink)" onclick="toggleAddSheet(false)">Batal</button>
     </div></div>`;
   }
-  const titles = { trx: 'Tambah transaksi', inst: 'Tambah cicilan', sav: 'Buat tabungan', accs: 'Tambah rekening' };
-  const needsAcc = (addMode === 'trx' || addMode === 'inst') && !S.acc.length;
+  const titles = { trx: editing ? 'Edit transaksi' : 'Tambah transaksi', transfer: 'Transfer antar rekening', inst: editing ? 'Edit cicilan' : 'Tambah cicilan', sav: editing ? 'Edit tabungan' : 'Buat tabungan', accs: editing ? 'Edit rekening' : 'Tambah rekening' };
+  const needsAcc = (addMode === 'trx' || addMode === 'inst' || addMode === 'accs' && false) && !S.acc.length;
+  const needs2Acc = addMode === 'transfer' && S.acc.length < 2;
   let body;
+  const accSel = (id, selId) => `<select id="${id}">${S.acc.map(a => `<option value="${a.id}" ${selId === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select>`;
   if (needsAcc) {
     body = `<div class="mute" style="margin-bottom:10px">Belum ada rekening. Tambah rekening dulu ya.</div>
       <input id="qa_name" placeholder="Nama rekening (BCA, Dompet, GoPay...)">
       <input id="qa_bal" type="text" inputmode="decimal" placeholder="Saldo awal (${CUR})">
       <button style="width:100%" onclick="addAcc('qa_')">Tambah rekening</button>`;
   } else if (addMode === 'trx') {
-    body = `<button class="scanBtn" onclick="document.getElementById('scanFile').click()">📷 Scan Struk</button>
+    const ed = editing && editing.table === 'transactions' ? S.tx.find(x => x.id === editing.id) : null;
+    body = `${ed ? '' : `<button class="scanBtn" onclick="document.getElementById('scanFile').click()">📷 Scan Struk</button>
       <input id="scanFile" type="file" accept="image/*" style="display:none" onchange="scanReceipt(this.files[0],'qt_')">
-      <div id="scanStatus"></div>
-      <select id="qt_type"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select>
-      <select id="qt_acc">${accOpts()}</select>
-      <input id="qt_amt" type="text" inputmode="decimal" placeholder="Jumlah (${CUR}), contoh 50.000">
-      <input id="qt_cat" placeholder="Kategori (makan, gaji, transport...)">
-      <input id="qt_note" placeholder="Catatan (opsional)">
-      <input id="qt_date" type="date" value="${today()}">
-      <button style="width:100%" onclick="addTx('qt_')">Simpan transaksi</button>`;
+      <div id="scanStatus"></div>`}
+      <select id="qt_type"><option value="expense" ${!ed || ed.type === 'expense' ? 'selected' : ''}>Pengeluaran</option><option value="income" ${ed && ed.type === 'income' ? 'selected' : ''}>Pemasukan</option></select>
+      ${accSel('qt_acc', ed ? ed.account_id : null)}
+      <input id="qt_amt" type="text" inputmode="decimal" placeholder="Jumlah (${CUR}), contoh 50.000" value="${ed ? toCurVal(ed.amount) : ''}">
+      <input id="qt_cat" placeholder="Kategori (makan, gaji, transport...)" value="${ed ? esc(ed.category || '') : ''}">
+      <input id="qt_note" placeholder="Catatan (opsional)" value="${ed ? esc(ed.note || '') : ''}">
+      <input id="qt_date" type="date" value="${ed ? ed.date : today()}">
+      <button style="width:100%" onclick="addTx('qt_')">${ed ? 'Simpan perubahan' : 'Simpan transaksi'}</button>
+      ${ed ? `<button class="ghost" style="width:100%;margin-top:8px" onclick="del('transactions','${ed.id}');toggleAddSheet(false)">Hapus transaksi</button>` : ''}`;
+  } else if (addMode === 'transfer') {
+    if (needs2Acc) {
+      body = `<div class="mute">Butuh minimal 2 rekening untuk transfer.</div><button style="width:100%;margin-top:10px" onclick="goAdd('accs')">Tambah rekening</button>`;
+    } else {
+      body = `<div class="mute" style="margin-bottom:4px">Dari rekening</div>${accSel('qf_from')}
+      <div class="mute" style="margin:8px 0 4px">Ke rekening</div>${accSel('qf_to')}
+      <input id="qf_amt" type="text" inputmode="decimal" placeholder="Jumlah (${CUR})">
+      <input id="qf_note" placeholder="Catatan (opsional)">
+      <input id="qf_date" type="date" value="${today()}">
+      <button style="width:100%" onclick="addTransfer()">Transfer</button>`;
+    }
   } else if (addMode === 'inst') {
-    body = `<input id="qi_name" placeholder="Nama cicilan (HP, motor...)">
-      <input id="qi_amt" type="text" inputmode="decimal" placeholder="Cicilan per bulan (${CUR})">
-      <input id="qi_tot" type="text" inputmode="decimal" placeholder="Total bulan">
-      <input id="qi_paid" type="text" inputmode="decimal" placeholder="Sudah dibayar berapa bulan (opsional)">
-      <select id="qi_acc">${accOpts()}</select>
-      <button style="width:100%" onclick="addInst('qi_')">Tambah cicilan</button>`;
+    const ed = editing && editing.table === 'installments' ? S.inst.find(x => x.id === editing.id) : null;
+    body = `<input id="qi_name" placeholder="Nama cicilan (HP, motor...)" value="${ed ? esc(ed.name) : ''}">
+      <input id="qi_amt" type="text" inputmode="decimal" placeholder="Cicilan per bulan (${CUR})" value="${ed ? toCurVal(ed.monthly_amount) : ''}">
+      <input id="qi_tot" type="text" inputmode="decimal" placeholder="Total bulan" value="${ed ? ed.total_months : ''}">
+      <input id="qi_paid" type="text" inputmode="decimal" placeholder="Sudah dibayar berapa bulan (opsional)" value="${ed ? ed.paid_months : ''}">
+      ${accSel('qi_acc', ed ? ed.account_id : null)}
+      <button style="width:100%" onclick="addInst('qi_')">${ed ? 'Simpan perubahan' : 'Tambah cicilan'}</button>
+      ${ed ? `<button class="ghost" style="width:100%;margin-top:8px" onclick="del('installments','${ed.id}');toggleAddSheet(false)">Hapus cicilan</button>` : ''}`;
   } else if (addMode === 'sav') {
-    body = `<input id="qs_name" placeholder="Nama tabungan (dana darurat, liburan...)">
-      <input id="qs_tgt" type="text" inputmode="decimal" placeholder="Target (${CUR}, opsional)">
-      <button style="width:100%" onclick="addSav('qs_')">Buat tabungan</button>
-      <div class="mute" style="margin-top:8px">Untuk isi/tarik dana tabungan yang sudah ada, buka tab Tabungan ya.</div>`;
+    const ed = editing && editing.table === 'savings' ? S.sav.find(x => x.id === editing.id) : null;
+    body = `<input id="qs_name" placeholder="Nama tabungan (dana darurat, liburan...)" value="${ed ? esc(ed.name) : ''}">
+      <input id="qs_tgt" type="text" inputmode="decimal" placeholder="Target (${CUR}, opsional)" value="${ed && ed.target ? toCurVal(ed.target) : ''}">
+      <button style="width:100%" onclick="addSav('qs_')">${ed ? 'Simpan perubahan' : 'Buat tabungan'}</button>
+      ${ed ? `<button class="ghost" style="width:100%;margin-top:8px" onclick="del('savings','${ed.id}');toggleAddSheet(false)">Hapus tabungan</button>` : '<div class="mute" style="margin-top:8px">Untuk isi/tarik dana tabungan yang sudah ada, buka tab Tabungan ya.</div>'}`;
   } else {
-    body = `<input id="qa_name" placeholder="Nama rekening (BCA, Dompet, GoPay...)">
-      <input id="qa_bal" type="text" inputmode="decimal" placeholder="Saldo awal (${CUR})">
-      <button style="width:100%" onclick="addAcc('qa_')">Tambah rekening</button>`;
+    const ed = editing && editing.table === 'accounts' ? S.acc.find(x => x.id === editing.id) : null;
+    body = `<input id="qa_name" placeholder="Nama rekening (BCA, Dompet, GoPay...)" value="${ed ? esc(ed.name) : ''}">
+      <input id="qa_bal" type="text" inputmode="decimal" placeholder="Saldo awal (${CUR})" value="${ed ? toCurVal(ed.balance) : ''}">
+      <button style="width:100%" onclick="addAcc('qa_')">${ed ? 'Simpan perubahan' : 'Tambah rekening'}</button>
+      ${ed ? `<button class="ghost" style="width:100%;margin-top:8px" onclick="del('accounts','${ed.id}');toggleAddSheet(false)">Hapus rekening</button>` : ''}`;
   }
   return `<div class="sheet-bg" onclick="if(event.target===this)toggleAddSheet(false)"><div class="sheet">
     <div class="row" style="margin-bottom:10px"><button class="ghost" style="color:var(--ink)" onclick="goAdd(null)">‹ Kembali</button><h3 style="margin:0">${titles[addMode]}</h3><span></span></div>
@@ -246,11 +276,47 @@ async function load() {
 }
 
 // ---------- Auth ----------
+let showForgot = false, showRecovery = false;
+function toggleForgot(v) { showForgot = v; render(); }
 function authView() {
-  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v28</span></h1><div class="card">
-    <input id="em" type="email" placeholder="Email" autocomplete="email">
-    <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
-    <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div></div></div>`;
+  if (showRecovery) { $('app').innerHTML = recoveryHtml(); return; }
+  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v29</span></h1><div class="card">
+    ${showForgot ? `
+      <div class="mute" style="margin-bottom:10px">Masukkan email kamu, nanti kami kirim link untuk atur ulang password.</div>
+      <input id="fp_email" type="email" placeholder="Email" autocomplete="email">
+      <button style="width:100%" onclick="sendReset()">Kirim link reset</button>
+      <button class="ghost" style="width:100%;margin-top:8px" onclick="toggleForgot(false)">‹ Kembali ke login</button>
+    ` : `
+      <input id="em" type="email" placeholder="Email" autocomplete="email">
+      <input id="pw" type="password" placeholder="Kata sandi (min. 6 karakter)" autocomplete="current-password">
+      <div class="row"><button onclick="login()">Masuk</button><button class="ghost" style="color:var(--main)" onclick="signup()">Daftar akun baru</button></div>
+      <button class="ghost" style="width:100%;margin-top:8px" onclick="toggleForgot(true)">Lupa password?</button>
+    `}
+  </div></div>`;
+}
+function recoveryHtml() {
+  return `<div class="wrap"><h1>Atur password baru</h1><div class="card">
+    <div class="mute" style="margin-bottom:10px">Link reset terverifikasi. Masukkan password baru kamu.</div>
+    <input id="rc_pw1" type="password" placeholder="Password baru (min. 6 karakter)" autocomplete="new-password">
+    <input id="rc_pw2" type="password" placeholder="Ulangi password baru" autocomplete="new-password">
+    <button style="width:100%" onclick="finishRecovery()">Simpan password baru</button>
+  </div></div>`;
+}
+async function sendReset() {
+  const email = v('fp_email').trim();
+  if (!email) return alert('Isi email kamu.');
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+  if (error) return alert(error.message);
+  alert('Link reset sudah dikirim. Cek inbox (atau folder spam) di email kamu.');
+  showForgot = false; render();
+}
+async function finishRecovery() {
+  const p1 = v('rc_pw1'), p2 = v('rc_pw2');
+  if (p1.length < 6) return alert('Password minimal 6 karakter.');
+  if (p1 !== p2) return alert('Konfirmasi password tidak cocok.');
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  if (error) return alert(error.message);
+  showRecovery = false; alert('Password berhasil diganti. Kamu sudah masuk.'); load();
 }
 function needCred() { if (!v('em').trim() || v('pw').length < 6) { alert('Isi email dan kata sandi (min. 6 karakter).'); return true; } }
 async function login() {
@@ -321,38 +387,60 @@ function home() {
   <div class="cols">${data.map(d =>
     `<div><span style="height:${d[1] / max * 100}px;background:var(--in)"></span><span style="height:${d[2] / max * 100}px;background:var(--out)"></span><br>${d[0].slice(5)}</div>`).join('')}</div>
   <div class="mute" style="margin-top:8px"><span class="in">■</span> pemasukan &nbsp; <span class="out">■</span> pengeluaran</div></div>
-  <h2 style="margin-left:0">Pengeluaran per kategori (${label})</h2><div class="card">${cats.length ? cats.map(([k, n]) =>
-    `<div class="row"><span>${esc(k)}</span><span>${rp(n)}</span></div><div class="bar"><i style="width:${n / exp * 100}%"></i></div>`).join('') : '<span class="mute">Belum ada pengeluaran bulan ini.</span>'}</div>
+  <h2 style="margin-left:0">Pengeluaran per kategori (${label})</h2><div class="card">${cats.length ? (() => {
+    const colors = ['#3956f5', '#8b6bff', '#1fa15c', '#e5533d', '#f5a623', '#00b8d9', '#d946ef', '#64748b'];
+    let acc0 = 0; const stops = cats.map(([, n], i) => { const p0 = acc0, p1 = acc0 + n / exp * 100; acc0 = p1; return `${colors[i % colors.length]} ${p0}% ${p1}%`; }).join(', ');
+    return `<div style="width:132px;height:132px;border-radius:50%;background:conic-gradient(${stops});margin:0 auto 16px;display:flex;align-items:center;justify-content:center">
+      <div style="width:76px;height:76px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center"><b style="font-size:13px">${rp(exp)}</b></div></div>` +
+      cats.map(([k, n], i) => `<div class="row"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${colors[i % colors.length]};margin-right:6px"></span>${esc(k)}</span><span>${rp(n)}</span></div><div class="bar"><i style="width:${n / exp * 100}%;background:${colors[i % colors.length]}"></i></div>`).join('');
+  })() : '<span class="mute">Belum ada pengeluaran bulan ini.</span>'}</div>
   <h2 style="margin-left:0">Unduh data</h2><div class="card"><input id="x_m" type="month" value="${m}">
     <div class="mute" style="margin-bottom:8px">Kosongkan bulan untuk mengunduh semua data.</div>
     <button onclick="exportXlsx()">Unduh Excel (.xlsx)</button></div>
   </div>`;
 }
 
+let txFilter = { q: '', cat: '', from: '', to: '' };
+function setTxFilter(k, val) { txFilter[k] = val; render(); }
+function clearTxFilter() { txFilter = { q: '', cat: '', from: '', to: '' }; render(); }
 function trx() {
   if (!S.acc.length) return `<h1>Transaksi</h1><div class="card">Tambah rekening dulu lewat tombol + di bawah.</div>`;
+  const cats = [...new Set(S.tx.map(t => t.category || 'Lainnya'))].sort();
+  let list = S.tx;
+  const f = txFilter;
+  if (f.q) { const q = f.q.toLowerCase(); list = list.filter(t => (t.category || '').toLowerCase().includes(q) || (t.note || '').toLowerCase().includes(q) || accName(t.account_id).toLowerCase().includes(q)); }
+  if (f.cat) list = list.filter(t => (t.category || 'Lainnya') === f.cat);
+  if (f.from) list = list.filter(t => t.date >= f.from);
+  if (f.to) list = list.filter(t => t.date <= f.to);
+  const active = f.q || f.cat || f.from || f.to;
   return `<h1>Transaksi</h1>
-  ${S.tx.slice(0, 50).map(t => `<div class="card row"><div class="txitem"><div class="icon">${catIcon(t.category)}</div><div><b>${esc(t.category || 'Lainnya')}</b> <span class="mute">${esc(t.note || '')}</span>
+  <div class="card">
+    <input id="txq" placeholder="Cari kategori, catatan, atau rekening..." value="${esc(f.q)}" onchange="setTxFilter('q', this.value)">
+    <select onchange="setTxFilter('cat', this.value)"><option value="">Semua kategori</option>${cats.map(c => `<option value="${esc(c)}" ${f.cat === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select>
+    <div class="row"><input type="date" value="${f.from}" onchange="setTxFilter('from', this.value)"><input type="date" value="${f.to}" onchange="setTxFilter('to', this.value)"></div>
+    ${active ? `<button class="ghost" style="width:100%" onclick="clearTxFilter()">Bersihkan filter (${list.length} hasil)</button>` : ''}
+  </div>
+  ${list.slice(0, active ? 300 : 50).map(t => `<div class="card row"><div class="txitem" style="cursor:pointer" onclick="editRow('transactions','${t.id}')"><div class="icon">${catIcon(t.category)}</div><div><b>${esc(t.category || 'Lainnya')}</b> <span class="mute">${esc(t.note || '')}</span>
     <div class="mute">${t.date} · ${esc(accName(t.account_id))}</div></div></div>
     <div style="text-align:right"><b class="${t.type === 'income' ? 'in' : 'out'}">${t.type === 'income' ? '+' : '-'}${rp(t.amount)}</b><br>
-    <button class="ghost" onclick="del('transactions','${t.id}')">Hapus</button></div></div>`).join('') || '<p class="mute">Belum ada transaksi.</p>'}`;
+    <button class="ghost" onclick="del('transactions','${t.id}')">Hapus</button></div></div>`).join('') || '<p class="mute">Tidak ada transaksi yang cocok.</p>'}`;
 }
 
 function accs() {
   return `<h1>Rekening</h1>
-  ${S.acc.map(a => `<div class="card row"><div><b>${esc(a.name)}</b><div class="big">${rp(accBal(a))}</div></div>
+  ${S.acc.map(a => `<div class="card row"><div style="cursor:pointer" onclick="editRow('accounts','${a.id}')"><b>${esc(a.name)}</b><div class="big">${rp(accBal(a))}</div></div>
     <button class="ghost" onclick="del('accounts','${a.id}')">Hapus</button></div>`).join('') || '<p class="mute">Belum ada rekening. Tambah lewat tombol + di bawah.</p>'}`;
 }
 
 function inst() {
   const list = S.inst.map(i => {
     const left = i.total_months - i.paid_months, pct = i.paid_months / i.total_months * 100;
-    return `<div class="card"><div class="row"><b>${esc(i.name)}</b><span class="mute">${esc(accName(i.account_id))}</span></div>
+    return `<div class="card"><div class="row" style="cursor:pointer" onclick="editRow('installments','${i.id}')"><b>${esc(i.name)}</b><span class="mute">${esc(accName(i.account_id))}</span></div>
       <div class="bar"><i style="width:${pct}%"></i></div>
       <div class="row"><span>${i.paid_months} / ${i.total_months} bulan</span><b>${left > 0 ? left + ' bulan lagi' : 'Lunas'}</b></div>
       <div class="mute">Sudah dibayar ${rp(i.paid_months * i.monthly_amount)} · Sisa ${rp(left * i.monthly_amount)} · ${rp(i.monthly_amount)}/bulan</div>
       <div class="row" style="margin-top:8px">${left > 0 ? `<button onclick="pay('${i.id}')">Bayar bulan ini</button>` : '<span></span>'}
-      <button class="ghost" onclick="del('installments','${i.id}')">Hapus</button></div></div>`;
+      <button class="ghost" onclick="editRow('installments','${i.id}')">Edit</button><button class="ghost" onclick="del('installments','${i.id}')">Hapus</button></div></div>`;
   }).join('') || '<p class="mute">Belum ada cicilan.</p>';
   const tot = S.inst.reduce((s, i) => s + (i.total_months - i.paid_months) * i.monthly_amount, 0);
   return `<h1>Cicilan</h1>
@@ -435,7 +523,7 @@ async function exportXlsx() {
 function sav() {
   const list = S.sav.map(x => {
     const b = savBal(x), pct = x.target ? Math.max(0, Math.min(100, b / x.target * 100)) : 0;
-    return `<div class="card"><div class="row"><b>${esc(x.name)}</b><button class="ghost" onclick="del('savings','${x.id}')">Hapus</button></div>
+    return `<div class="card"><div class="row"><b style="cursor:pointer" onclick="editRow('savings','${x.id}')">${esc(x.name)}</b><span><button class="ghost" onclick="editRow('savings','${x.id}')">Edit</button><button class="ghost" onclick="del('savings','${x.id}')">Hapus</button></span></div>
       <div class="big">${rp(b)}</div>
       ${x.target ? `<div class="bar"><i style="width:${pct}%"></i></div><div class="mute">Target ${rp(x.target)} · ${Math.round(pct)}% · kurang ${rp(Math.max(0, x.target - b))}</div>` : ''}
       <select id="m_act_${x.id}" onchange="toggleAcc('${x.id}')">
@@ -498,7 +586,21 @@ async function addSav(p) {
   p = p || 's_';
   if (!v(p + 'name')) return alert('Isi nama tabungan.');
   const t = inIDR(p + 'tgt'); if (t === null) return;
-  if (await run(sb.from('savings').insert({ name: v(p + 'name'), target: t > 0 ? t : null }))) { if (p[0] === 'q') { showAddSheet = false; addMode = null; } load(); }
+  const payload = { name: v(p + 'name'), target: t > 0 ? t : null };
+  const isEdit = editing && editing.table === 'savings';
+  const q = isEdit ? sb.from('savings').update(payload).eq('id', editing.id) : sb.from('savings').insert(payload);
+  if (await run(q)) { if (p[0] === 'q') { showAddSheet = false; addMode = null; editing = null; } load(); }
+}
+async function addTransfer() {
+  const from = v('qf_from'), to = v('qf_to');
+  if (!from || !to || from === to) return alert('Pilih dua rekening yang berbeda.');
+  const amt = inIDR('qf_amt'); if (amt === null) return;
+  if (!(amt > 0)) return alert('Isi jumlah.');
+  const note = v('qf_note').trim(), date = v('qf_date') || today();
+  const fromAcc = S.acc.find(a => a.id === from), toAcc = S.acc.find(a => a.id === to);
+  const ok1 = await run(sb.from('transactions').insert({ account_id: from, type: 'expense', amount: amt, category: 'Transfer', note: 'Ke ' + (toAcc ? toAcc.name : '') + (note ? ' — ' + note : ''), date }));
+  const ok2 = ok1 && await run(sb.from('transactions').insert({ account_id: to, type: 'income', amount: amt, category: 'Transfer', note: 'Dari ' + (fromAcc ? fromAcc.name : '') + (note ? ' — ' + note : ''), date }));
+  if (ok2) { showAddSheet = false; addMode = null; load(); }
 }
 async function move(id, type, all) {
   const x = S.sav.find(y => y.id === id); if (!x) return;
@@ -526,19 +628,28 @@ async function addAcc(p) {
   p = p || 'a_';
   if (!v(p + 'name')) return alert('Isi nama rekening.');
   const bal = inIDR(p + 'bal'); if (bal === null) return;
-  if (await run(sb.from('accounts').insert({ name: v(p + 'name'), balance: bal }))) { if (p[0] === 'q') { showAddSheet = false; addMode = null; } load(); }
+  const payload = { name: v(p + 'name'), balance: bal };
+  const isEdit = editing && editing.table === 'accounts';
+  const q = isEdit ? sb.from('accounts').update(payload).eq('id', editing.id) : sb.from('accounts').insert(payload);
+  if (await run(q)) { if (p[0] === 'q') { showAddSheet = false; addMode = null; editing = null; } load(); }
 }
 async function addTx(p) {
   p = p || 't_';
   const amt = inIDR(p + 'amt'); if (amt === null) return;
   if (!(amt > 0)) return alert('Isi jumlah.');
-  if (await run(sb.from('transactions').insert({ account_id: v(p + 'acc'), type: v(p + 'type'), amount: amt, category: v(p + 'cat') || null, note: v(p + 'note') || null, date: v(p + 'date') || today() }))) { if (p[0] === 'q') { showAddSheet = false; addMode = null; } load(); }
+  const payload = { account_id: v(p + 'acc'), type: v(p + 'type'), amount: amt, category: v(p + 'cat') || null, note: v(p + 'note') || null, date: v(p + 'date') || today() };
+  const isEdit = editing && editing.table === 'transactions';
+  const q = isEdit ? sb.from('transactions').update(payload).eq('id', editing.id) : sb.from('transactions').insert(payload);
+  if (await run(q)) { if (p[0] === 'q') { showAddSheet = false; addMode = null; editing = null; } load(); }
 }
 async function addInst(p) {
   p = p || 'i_';
   const mo = inIDR(p + 'amt'); if (mo === null) return;
   if (!v(p + 'name') || !(mo > 0) || !(+v(p + 'tot') > 0)) return alert('Lengkapi nama, cicilan per bulan, dan total bulan.');
-  if (await run(sb.from('installments').insert({ account_id: v(p + 'acc'), name: v(p + 'name'), monthly_amount: mo, total_months: +v(p + 'tot'), paid_months: Math.min(+v(p + 'paid') || 0, +v(p + 'tot')) }))) { if (p[0] === 'q') { showAddSheet = false; addMode = null; } load(); }
+  const payload = { account_id: v(p + 'acc'), name: v(p + 'name'), monthly_amount: mo, total_months: +v(p + 'tot'), paid_months: Math.min(+v(p + 'paid') || 0, +v(p + 'tot')) };
+  const isEdit = editing && editing.table === 'installments';
+  const q = isEdit ? sb.from('installments').update(payload).eq('id', editing.id) : sb.from('installments').insert(payload);
+  if (await run(q)) { if (p[0] === 'q') { showAddSheet = false; addMode = null; editing = null; } load(); }
 }
 async function saveUsername() {
   const name = v('pf_uname').trim();
@@ -567,6 +678,9 @@ async function del(table, id) {
   if (await run(sb.from(table).delete().eq('id', id))) load();
 }
 fetchRates();
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'PASSWORD_RECOVERY') { CURRENT_USER = session.user; showRecovery = true; authView(); }
+});
 boot();
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {})); }
 </script>
