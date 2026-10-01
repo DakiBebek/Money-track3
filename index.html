@@ -133,7 +133,7 @@ const today = () => new Date().toLocaleDateString('en-CA');
 const ym = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
 const sum = (a, t) => a.filter(x => x.type === t).reduce((s, x) => s + +x.amount, 0);
 function shiftMonth(m, n) { const [y, mo] = m.split('-').map(Number); const d = new Date(y, mo - 1 + n, 1); return ym(d); }
-let S = { acc: [], tx: [], inst: [], sav: [], mv: [], tab: 'home', month: ym(new Date()) };
+let S = { acc: [], tx: [], inst: [], sav: [], mv: [], bud: [], rec: [], tab: 'home', month: ym(new Date()) };
 const THEMES = {
   modern: { label: 'Modern (Biru)', swatch: '#3956f5', vars: { '--bg': '#eef1f8', '--card': '#fff', '--ink': '#151a30', '--mute': '#7c85a3', '--line': '#e4e8f5', '--main': '#3956f5', '--main2': '#2540d6', '--in': '#1fa15c', '--out': '#e5533d', '--hero1': '#3956f5', '--hero2': '#2135b8', '--hero-ink': '#fff', '--hero-mute': 'rgba(255,255,255,.75)', '--hero-chip': 'rgba(255,255,255,.14)', '--hero-border': 'none', '--font': "-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" } },
   klasik: { label: 'Klasik (Hijau)', swatch: '#1f6b4a', vars: { '--bg': '#f3f6f2', '--card': '#fff', '--ink': '#16241c', '--mute': '#66756b', '--line': '#dbe4dc', '--main': '#1f6b4a', '--main2': '#18563b', '--in': '#1f6b4a', '--out': '#c2452d', '--hero1': '#fff', '--hero2': '#fff', '--hero-ink': '#16241c', '--hero-mute': '#66756b', '--hero-chip': '#f3f6f2', '--hero-border': '1px solid #dbe4dc', '--font': "Georgia,'Times New Roman',serif" } },
@@ -160,14 +160,14 @@ function editRow(table, id) {
 function addSheetHtml() {
   if (!showAddSheet) return '';
   if (!addMode) {
-    const opts = [['trx', '💸', 'Transaksi', 'Catat pemasukan / pengeluaran'], ['transfer', '🔁', 'Transfer', 'Pindah saldo antar rekening'], ['inst', '🏦', 'Cicilan', 'Tambah cicilan baru'], ['sav', '💰', 'Tabungan', 'Buat atau isi tabungan'], ['accs', '🏛️', 'Rekening', 'Tambah rekening baru']];
+    const opts = [['trx', '💸', 'Transaksi', 'Catat pemasukan / pengeluaran'], ['transfer', '🔁', 'Transfer', 'Pindah saldo antar rekening'], ['inst', '🏦', 'Cicilan', 'Tambah cicilan baru'], ['sav', '💰', 'Tabungan', 'Buat atau isi tabungan'], ['accs', '🏛️', 'Rekening', 'Tambah rekening baru'], ['budget', '🎯', 'Budget', 'Atur batas pengeluaran kategori'], ['recurring', '📆', 'Transaksi berulang', 'Otomatis tiap bulan (gaji, langganan...)']];
     return `<div class="sheet-bg" onclick="if(event.target===this)toggleAddSheet(false)"><div class="sheet"><h3>Mau tambah apa?</h3>
       ${opts.map(([k, ic, l, d]) => `<div class="theme-opt" onclick="goAdd('${k}')"><div class="icon" style="background:var(--bg)">${ic}</div><div><b>${l}</b><div class="mute">${d}</div></div></div>`).join('')}
       <button style="width:100%;margin-top:12px;background:var(--bg);color:var(--ink)" onclick="toggleAddSheet(false)">Batal</button>
     </div></div>`;
   }
-  const titles = { trx: editing ? 'Edit transaksi' : 'Tambah transaksi', transfer: 'Transfer antar rekening', inst: editing ? 'Edit cicilan' : 'Tambah cicilan', sav: editing ? 'Edit tabungan' : 'Buat tabungan', accs: editing ? 'Edit rekening' : 'Tambah rekening' };
-  const needsAcc = (addMode === 'trx' || addMode === 'inst' || addMode === 'accs' && false) && !S.acc.length;
+  const titles = { trx: editing ? 'Edit transaksi' : 'Tambah transaksi', transfer: 'Transfer antar rekening', inst: editing ? 'Edit cicilan' : 'Tambah cicilan', sav: editing ? 'Edit tabungan' : 'Buat tabungan', accs: editing ? 'Edit rekening' : 'Tambah rekening', budget: editing ? 'Edit budget' : 'Atur budget', recurring: editing ? 'Edit transaksi berulang' : 'Buat transaksi berulang' };
+  const needsAcc = (addMode === 'trx' || addMode === 'inst' || addMode === 'recurring') && !S.acc.length;
   const needs2Acc = addMode === 'transfer' && S.acc.length < 2;
   let body;
   const accSel = (id, selId) => `<select id="${id}">${S.acc.map(a => `<option value="${a.id}" ${selId === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}</select>`;
@@ -215,6 +215,26 @@ function addSheetHtml() {
       <input id="qs_tgt" type="text" inputmode="decimal" placeholder="Target (${CUR}, opsional)" value="${ed && ed.target ? toCurVal(ed.target) : ''}">
       <button style="width:100%" onclick="addSav('qs_')">${ed ? 'Simpan perubahan' : 'Buat tabungan'}</button>
       ${ed ? `<button class="ghost" style="width:100%;margin-top:8px" onclick="del('savings','${ed.id}');toggleAddSheet(false)">Hapus tabungan</button>` : '<div class="mute" style="margin-top:8px">Untuk isi/tarik dana tabungan yang sudah ada, buka tab Tabungan ya.</div>'}`;
+  } else if (addMode === 'budget') {
+    const ed = editing && editing.table === 'budgets' ? S.bud.find(x => x.id === editing.id) : null;
+    body = `<input id="qb_cat" placeholder="Kategori (makan, transport...)" value="${ed ? esc(ed.category) : ''}">
+      <input id="qb_limit" type="text" inputmode="decimal" placeholder="Batas per bulan (${CUR})" value="${ed ? toCurVal(ed.monthly_limit) : ''}">
+      <button style="width:100%" onclick="addBudget('qb_')">${ed ? 'Simpan perubahan' : 'Simpan budget'}</button>
+      ${ed ? `<button class="ghost" style="width:100%;margin-top:8px" onclick="del('budgets','${ed.id}');toggleAddSheet(false)">Hapus budget</button>` : '<div class="mute" style="margin-top:8px">Progresnya muncul di Beranda, di bagian Budget.</div>'}`;
+  } else if (addMode === 'recurring') {
+    if (needsAcc) {
+      body = `<div class="mute">Belum ada rekening. Tambah rekening dulu ya.</div><button style="width:100%;margin-top:10px" onclick="goAdd('accs')">Tambah rekening</button>`;
+    } else {
+      const ed = editing && editing.table === 'recurring' ? S.rec.find(x => x.id === editing.id) : null;
+      body = `<input id="qr_name" placeholder="Nama (Gaji, Langganan Netflix...)" value="${ed ? esc(ed.name) : ''}">
+        <select id="qr_type"><option value="expense" ${!ed || ed.type === 'expense' ? 'selected' : ''}>Pengeluaran</option><option value="income" ${ed && ed.type === 'income' ? 'selected' : ''}>Pemasukan</option></select>
+        ${accSel('qr_acc', ed ? ed.account_id : null)}
+        <input id="qr_amt" type="text" inputmode="decimal" placeholder="Jumlah (${CUR})" value="${ed ? toCurVal(ed.amount) : ''}">
+        <input id="qr_cat" placeholder="Kategori (opsional)" value="${ed ? esc(ed.category || '') : ''}">
+        <input id="qr_day" type="text" inputmode="numeric" placeholder="Tanggal tiap bulan (1-28)" value="${ed ? ed.day_of_month : ''}">
+        <button style="width:100%" onclick="addRecurring('qr_')">${ed ? 'Simpan perubahan' : 'Buat transaksi berulang'}</button>
+        ${ed ? `<button class="ghost" style="width:100%;margin-top:8px" onclick="del('recurring','${ed.id}');toggleAddSheet(false)">Hapus</button>` : '<div class="mute" style="margin-top:8px">Akan otomatis tercatat tiap bulan saat kamu buka app pada atau setelah tanggal itu.</div>'}`;
+    }
   } else {
     const ed = editing && editing.table === 'accounts' ? S.acc.find(x => x.id === editing.id) : null;
     body = `<input id="qa_name" placeholder="Nama rekening (BCA, Dompet, GoPay...)" value="${ed ? esc(ed.name) : ''}">
@@ -263,16 +283,33 @@ async function boot() {
   const { data: { session } } = await sb.auth.getSession();
   if (session) { CURRENT_USER = session.user; load(); } else authView();
 }
-async function load() {
-  const [a, t, i, sv, mv] = await Promise.all([
+async function load(skipRecurring) {
+  const [a, t, i, sv, mv, bu, rc] = await Promise.all([
     sb.from('accounts').select('*').order('created_at'),
     sb.from('transactions').select('*').order('date', { ascending: false }).order('created_at', { ascending: false }),
     sb.from('installments').select('*').order('created_at'),
     sb.from('savings').select('*').order('created_at'),
-    sb.from('saving_moves').select('*').order('created_at')
+    sb.from('saving_moves').select('*').order('created_at'),
+    sb.from('budgets').select('*').order('created_at'),
+    sb.from('recurring').select('*').order('created_at')
   ]);
   S.acc = a.data || []; S.tx = t.data || []; S.inst = i.data || []; S.sav = sv.data || []; S.mv = mv.data || [];
+  S.bud = bu.data || []; S.rec = rc.data || [];
+  if (!skipRecurring && await runRecurring()) return load(true); // transaksi otomatis dibuat -> muat ulang sekali
   render();
+}
+async function runRecurring() {
+  if (!S.rec.length) return false;
+  const nowYm = ym(new Date()), today = new Date().getDate();
+  let did = false;
+  for (const r of S.rec) {
+    if (r.last_run === nowYm || today < r.day_of_month) continue;
+    const date = nowYm + '-' + String(r.day_of_month).padStart(2, '0');
+    await sb.from('transactions').insert({ account_id: r.account_id, type: r.type, amount: r.amount, category: r.category, note: (r.note ? r.note + ' · ' : '') + 'Otomatis: ' + r.name, date });
+    await sb.from('recurring').update({ last_run: nowYm }).eq('id', r.id);
+    did = true;
+  }
+  return did;
 }
 
 // ---------- Auth ----------
@@ -280,7 +317,7 @@ let showForgot = false, showRecovery = false;
 function toggleForgot(v) { showForgot = v; render(); }
 function authView() {
   if (showRecovery) { $('app').innerHTML = recoveryHtml(); return; }
-  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v29</span></h1><div class="card">
+  $('app').innerHTML = gearBtn() + themeSheetHtml() + `<div class="wrap"><h1>Duitku <span class="mute">v30</span></h1><div class="card">
     ${showForgot ? `
       <div class="mute" style="margin-bottom:10px">Masukkan email kamu, nanti kami kirim link untuk atur ulang password.</div>
       <input id="fp_email" type="email" placeholder="Email" autocomplete="email">
@@ -355,6 +392,15 @@ function render() {
   $('app').innerHTML = (S.tab === 'home' ? views.home() : `<div class="wrap">${curBar()}${views[S.tab]()}</div>`) + navHtml + themeSheetHtml() + addSheetHtml();
 }
 
+function onboardCard() {
+  let dismissed = false;
+  try { dismissed = localStorage.getItem('onboarded') === '1'; } catch (e) {}
+  if (dismissed || S.acc.length) return '';
+  return `<div class="card"><b>Selamat datang di Duitku 👋</b>
+    <div class="mute" style="margin:8px 0">Mulai dengan tekan tombol <b style="color:var(--ink)">+</b> di bawah buat tambah rekening pertamamu. Dari situ juga kamu bisa catat transaksi, cicilan, tabungan, budget, sampai transaksi berulang. Tekan ⚙️ buat ganti tema atau atur akun.</div>
+    <button class="ghost" style="width:100%" onclick="dismissOnboard()">Mengerti, sembunyikan</button></div>`;
+}
+function dismissOnboard() { try { localStorage.setItem('onboarded', '1'); } catch (e) {} render(); }
 function home() {
   const m = S.month, thisMonth = ym(new Date());
   const cur = S.tx.filter(t => t.date.startsWith(m));
@@ -382,6 +428,7 @@ function home() {
     <div class="chips"><div class="chip"><div class="mute">↓ Masuk</div><div class="n">${rp(inc)}</div></div>
     <div class="chip"><div class="mute">↑ Keluar</div><div class="n">${rp(exp)}</div></div></div></div>
   <div class="wrap" style="padding-top:60px">
+  ${onboardCard()}
   <h2 style="margin-left:0">6 bulan terakhir</h2><div class="card" style="cursor:pointer" onclick="S.tab='trx';render()">
   <div class="row" style="margin-bottom:2px"><span class="mute">Lihat semua riwayat transaksi</span><span class="mute">›</span></div>
   <div class="cols">${data.map(d =>
@@ -394,9 +441,19 @@ function home() {
       <div style="width:76px;height:76px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center"><b style="font-size:13px">${rp(exp)}</b></div></div>` +
       cats.map(([k, n], i) => `<div class="row"><span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${colors[i % colors.length]};margin-right:6px"></span>${esc(k)}</span><span>${rp(n)}</span></div><div class="bar"><i style="width:${n / exp * 100}%;background:${colors[i % colors.length]}"></i></div>`).join('');
   })() : '<span class="mute">Belum ada pengeluaran bulan ini.</span>'}</div>
+  ${S.bud.length ? `<h2 style="margin-left:0">Budget (${label})</h2><div class="card">${S.bud.map(b => {
+    const spent = cat[b.category] || 0, pct = Math.min(100, spent / b.monthly_limit * 100), over = spent > b.monthly_limit;
+    return `<div class="row" style="cursor:pointer" onclick="editRow('budgets','${b.id}')"><span>${esc(b.category)}</span><span class="${over ? 'out' : ''}">${rp(spent)} / ${rp(b.monthly_limit)}</span></div><div class="bar"><i style="width:${pct}%;background:${over ? 'var(--out)' : 'var(--main)'}"></i></div>`;
+  }).join('')}</div>` : ''}
   <h2 style="margin-left:0">Unduh data</h2><div class="card"><input id="x_m" type="month" value="${m}">
     <div class="mute" style="margin-bottom:8px">Kosongkan bulan untuk mengunduh semua data.</div>
     <button onclick="exportXlsx()">Unduh Excel (.xlsx)</button></div>
+  <h2 style="margin-left:0">Import data</h2><div class="card">
+    <div class="mute" style="margin-bottom:8px">Upload file CSV dengan kolom Tanggal, Rekening, Tipe/Kategori, dan Pemasukan/Pengeluaran (atau Jumlah). Rekening yang namanya belum ada otomatis dibuat.</div>
+    <button class="scanBtn" onclick="document.getElementById('impFile').click()">📂 Pilih file CSV</button>
+    <input id="impFile" type="file" accept=".csv,text/csv" style="display:none" onchange="importCsv(this.files[0])">
+    <div id="impStatus"></div>
+  </div>
   </div>`;
 }
 
@@ -423,7 +480,10 @@ function trx() {
   ${list.slice(0, active ? 300 : 50).map(t => `<div class="card row"><div class="txitem" style="cursor:pointer" onclick="editRow('transactions','${t.id}')"><div class="icon">${catIcon(t.category)}</div><div><b>${esc(t.category || 'Lainnya')}</b> <span class="mute">${esc(t.note || '')}</span>
     <div class="mute">${t.date} · ${esc(accName(t.account_id))}</div></div></div>
     <div style="text-align:right"><b class="${t.type === 'income' ? 'in' : 'out'}">${t.type === 'income' ? '+' : '-'}${rp(t.amount)}</b><br>
-    <button class="ghost" onclick="del('transactions','${t.id}')">Hapus</button></div></div>`).join('') || '<p class="mute">Tidak ada transaksi yang cocok.</p>'}`;
+    <button class="ghost" onclick="del('transactions','${t.id}')">Hapus</button></div></div>`).join('') || '<p class="mute">Tidak ada transaksi yang cocok.</p>'}
+  ${S.rec.length ? `<h2 style="margin-left:0">Transaksi berulang</h2>${S.rec.map(r => `<div class="card row" style="cursor:pointer" onclick="editRow('recurring','${r.id}')"><div><b>${esc(r.name)}</b> <span class="mute">tgl ${r.day_of_month}</span>
+    <div class="mute">${esc(accName(r.account_id))}${r.category ? ' · ' + esc(r.category) : ''}</div></div>
+    <b class="${r.type === 'income' ? 'in' : 'out'}">${r.type === 'income' ? '+' : '-'}${rp(r.amount)}</b></div>`).join('')}` : ''}`;
 }
 
 function accs() {
@@ -446,6 +506,62 @@ function inst() {
   return `<h1>Cicilan</h1>
   <div class="card"><div class="mute">Total sisa semua cicilan</div><div class="big out">${rp(tot)}</div></div>
   ${list}`;
+}
+
+// ---------- Import CSV ----------
+function parseCSV(text) {
+  const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim() !== '');
+  const splitLine = line => {
+    const out = []; let cur = '', q = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (q) { if (c === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+      else { if (c === '"') q = true; else if (c === ',' || c === ';') { out.push(cur); cur = ''; } else cur += c; }
+    }
+    out.push(cur); return out.map(s => s.trim());
+  };
+  const header = splitLine(lines[0]).map(h => h.toLowerCase());
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) { const cells = splitLine(lines[i]); const obj = {}; header.forEach((h, idx) => obj[h] = cells[idx] ?? ''); rows.push(obj); }
+  return rows;
+}
+async function importCsv(file) {
+  if (!file) return;
+  const box = $('impStatus');
+  box.innerHTML = '<div class="mute" style="margin-top:6px">⏳ Membaca file...</div>';
+  try {
+    const text = await file.text();
+    const rows = parseCSV(text);
+    const col = (o, names) => { for (const n of names) if (o[n] !== undefined && o[n] !== '') return o[n]; return ''; };
+    const accCache = {}; S.acc.forEach(a => accCache[a.name.toLowerCase()] = a.id);
+    const toInsert = []; let skipped = 0;
+    for (const r of rows) {
+      let dateRaw = col(r, ['tanggal', 'date']), date = dateRaw;
+      const dm = dateRaw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+      if (dm) { let [, d, mo, y] = dm; if (y.length === 2) y = '20' + y; date = y + '-' + mo.padStart(2, '0') + '-' + d.padStart(2, '0'); }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { skipped++; continue; }
+      const accNameRaw = col(r, ['rekening', 'account']) || S.acc[0]?.name || '';
+      let accId = accCache[accNameRaw.toLowerCase()];
+      if (!accId && accNameRaw) {
+        const { data, error } = await sb.from('accounts').insert({ name: accNameRaw, balance: 0 }).select().single();
+        if (!error && data) { accId = data.id; accCache[accNameRaw.toLowerCase()] = accId; S.acc.push(data); }
+      }
+      if (!accId) { skipped++; continue; }
+      let type = col(r, ['tipe', 'type']).toLowerCase();
+      const incAmt = parseAmt(col(r, ['pemasukan', 'income'])), expAmt = parseAmt(col(r, ['pengeluaran', 'expense']));
+      let amount = 0;
+      if (incAmt > 0) { amount = incAmt; type = 'income'; }
+      else if (expAmt > 0) { amount = expAmt; type = 'expense'; }
+      else { amount = parseAmt(col(r, ['jumlah', 'amount'])); type = /masuk|income|in\b/i.test(type) ? 'income' : 'expense'; }
+      if (!(amount > 0)) { skipped++; continue; }
+      toInsert.push({ account_id: accId, type, amount, category: col(r, ['kategori', 'category']) || null, note: col(r, ['catatan', 'note']) || null, date });
+    }
+    if (toInsert.length) await run(sb.from('transactions').insert(toInsert));
+    box.innerHTML = `<div class="mute" style="margin-top:6px">✅ ${toInsert.length} transaksi diimpor${skipped ? ', ' + skipped + ' baris dilewati' : ''}.</div>`;
+    load();
+  } catch (e) {
+    box.innerHTML = '<div class="mute" style="margin-top:6px">⚠️ Gagal membaca file (' + esc(e.message || e) + ').</div>';
+  }
 }
 
 // ---------- Export ----------
@@ -590,6 +706,28 @@ async function addSav(p) {
   const isEdit = editing && editing.table === 'savings';
   const q = isEdit ? sb.from('savings').update(payload).eq('id', editing.id) : sb.from('savings').insert(payload);
   if (await run(q)) { if (p[0] === 'q') { showAddSheet = false; addMode = null; editing = null; } load(); }
+}
+async function addBudget(p) {
+  p = p || 'qb_';
+  const cat = v(p + 'cat').trim(); if (!cat) return alert('Isi kategori.');
+  const lim = inIDR(p + 'limit'); if (lim === null) return;
+  if (!(lim > 0)) return alert('Isi batas budget.');
+  const payload = { category: cat, monthly_limit: lim };
+  const isEdit = editing && editing.table === 'budgets';
+  const q = isEdit ? sb.from('budgets').update(payload).eq('id', editing.id) : sb.from('budgets').insert(payload);
+  if (await run(q)) { showAddSheet = false; addMode = null; editing = null; load(); }
+}
+async function addRecurring(p) {
+  p = p || 'qr_';
+  const name = v(p + 'name').trim(); if (!name) return alert('Isi nama.');
+  const amt = inIDR(p + 'amt'); if (amt === null) return;
+  const day = +v(p + 'day');
+  if (!(amt > 0)) return alert('Isi jumlah.');
+  if (!(day >= 1 && day <= 28)) return alert('Tanggal harus antara 1-28 (biar aman untuk semua bulan).');
+  const payload = { account_id: v(p + 'acc'), name, type: v(p + 'type'), amount: amt, category: v(p + 'cat') || null, day_of_month: day };
+  const isEdit = editing && editing.table === 'recurring';
+  const q = isEdit ? sb.from('recurring').update(payload).eq('id', editing.id) : sb.from('recurring').insert(payload);
+  if (await run(q)) { showAddSheet = false; addMode = null; editing = null; load(); }
 }
 async function addTransfer() {
   const from = v('qf_from'), to = v('qf_to');
