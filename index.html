@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Duitku">
-<!-- OPTIMASI: Script utama di-defer, library berat (Excel/Tesseract) dihapus dari sini -->
+<!-- Script utama di-defer, library berat (Excel/Tesseract) dimuat dinamis -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" defer></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
@@ -96,6 +96,13 @@ let sb;
 function initSupabase() {
   if (typeof supabase !== 'undefined') {
     sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    // Perbaikan layar blank: Listener Auth diletakkan di sini, 
+    // agar berjalan SETELAH sb diinisialisasi
+    sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') { CURRENT_USER = session.user; showRecovery = true; authView(); }
+    });
+
     boot();
   } else {
     setTimeout(initSupabase, 50);
@@ -188,7 +195,7 @@ function shiftMonth(m, n) { const [y, mo] = m.split('-').map(Number); const d = 
 let S = { acc: [], tx: [], inst: [], sav: [], mv: [], bud: [], rec: [], tab: 'home', month: ym(new Date()) };
 
 const THEMES = {
-  modern: { label: 'Modern (Biru)', swatch: '#3b82f6', vars: { '--bg': '#f4f6f8', '--card': '#fff', '--ink': '#0f172a', '--mute': '#64748b', '--line': '#e2e8f0', '--main': '#3b82f6', '--main2': '#2563eb', '--in': '#10b981', '--out': '#ef4444', '--hero1': '#3b82f6', '--hero2': '#1d4ed8', '--hero-ink': '#fff', '--hero-mute': 'rgba(255,255,255,.8)', '--hero-chip': 'rgba(255,255,255,.2)', '--hero-border': 'none', '--font': "'Inter',-apple-system,sans-serif" } },
+  modern: { label: 'Modern (Biru)', swatch: '#3b82f6', vars: { '--bg': '#f4f6f8', '--card': '#fff', '--ink': '#0f172a', '--mute': '#64748b', '--line': '#e2e8f0', '--main': '#3b82f6', '--main2': '#2563eb', '--in': '#10b981', '--out': '#ef4444', '--hero1': '#3b82f6', '--hero2': '#1d4ed8', '--hero-ink': '#fff', '--hero-mute: 'rgba(255,255,255,.8)', '--hero-chip': 'rgba(255,255,255,.2)', '--hero-border': 'none', '--font': "'Inter',-apple-system,sans-serif" } },
   klasik: { label: 'Klasik (Hijau)', swatch: '#10b981', vars: { '--bg': '#f0fdf4', '--card': '#fff', '--ink': '#064e3b', '--mute': '#047857', '--line': '#d1fae5', '--main': '#10b981', '--main2': '#059669', '--in': '#10b981', '--out': '#ef4444', '--hero1': '#059669', '--hero2': '#065f46', '--hero-ink': '#fff', '--hero-mute': 'rgba(255,255,255,.8)', '--hero-chip': 'rgba(255,255,255,.2)', '--hero-border': 'none', '--font': "Georgia,serif" } },
   gelap: { label: 'Gelap (Malam)', swatch: '#8b5cf6', vars: { '--bg': '#0f172a', '--card': '#1e293b', '--ink': '#f8fafc', '--mute': '#94a3b8', '--line': '#334155', '--main': '#8b5cf6', '--main2': '#7c3aed', '--in': '#34d399', '--out': '#f87171', '--hero1': '#6d28d9', '--hero2': '#4c1d95', '--hero-ink': '#fff', '--hero-mute': 'rgba(255,255,255,.8)', '--hero-chip': 'rgba(255,255,255,.2)', '--hero-border': 'none', '--font': "'Inter',-apple-system,sans-serif" } },
 };
@@ -902,10 +909,7 @@ async function del(table, id) {
 }
 
 fetchRates();
-sb.auth.onAuthStateChange((event, session) => {
-  if (event === 'PASSWORD_RECOVERY') { CURRENT_USER = session.user; showRecovery = true; authView(); }
-});
-initSupabase();
+initSupabase(); // Panggil fungsi inisialisasi
 
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {})); }
 </script>
