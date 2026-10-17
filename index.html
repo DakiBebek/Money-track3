@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Duitku">
-<!-- Script utama di-defer, library berat (Excel/Tesseract) dimuat dinamis -->
+<!-- Script utama di-defer, library berat dimuat dinamis -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" defer></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
@@ -73,10 +73,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:none;borde
 .txitem{display:flex;gap:10px;align-items:center}
 nav{position:fixed;bottom:0;left:0;right:0;display:flex;align-items:flex-end;background:rgba(255, 255, 255, 0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:8px 0 calc(8px + env(safe-area-inset-bottom,0px));z-index:30}
 @media(prefers-color-scheme:dark){nav{background:rgba(30, 41, 59, 0.85)}}
-nav button{flex:1;background:none;color:var(--mute);border-radius:0;padding:10px 0;font-size:12px;font-weight:600}
-nav button.on{color:var(--main)}
-nav button.fab{position:relative;top:-24px;flex:0 0 auto;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--hero1),var(--hero2));color:#fff;font-size:30px;font-weight:300;box-shadow:0 8px 20px rgba(59,130,246,.4);display:flex;align-items:center;justify-content:center;margin:0 12px;transition:transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)}
+
+/* OPTIMASI NAVIGASI: Hanya Ikon, Lebih Besar & Interaktif */
+nav button{flex:1;background:none;color:var(--mute);border-radius:0;padding:14px 0;font-size:24px;opacity:0.4;transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);cursor:pointer}
+nav button.on{opacity:1;transform:scale(1.2)}
+nav button.fab{position:relative;top:-24px;flex:0 0 auto;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--hero1),var(--hero2));color:#fff;font-size:30px;font-weight:300;box-shadow:0 8px 20px rgba(59,130,246,.4);display:flex;align-items:center;justify-content:center;margin:0 12px;opacity:1;transform:none}
 nav button.fab:active{transform:scale(0.9) rotate(15deg)}
+
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 24px;border-radius:999px;font-weight:600;font-size:14px;z-index:9999;box-shadow:0 10px 15px -3px rgba(0,0,0,.1);animation:toastSlide 0.3s cubic-bezier(0.16, 1, 0.3, 1)}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -480,12 +483,15 @@ const CAT_ICON = { makan: '🍜', makanan: '🍜', minuman: '🥤', transport: '
 const catIcon = k => CAT_ICON[(k || '').toLowerCase()] || (k ? '💳' : '💳');
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+// ====== OPTIMASI MENU NAVIGASI: Hanya Ikon (Tanpa Teks) ======
 function render() {
   const views = { home, trx, accs, inst, sav };
+  // Label 'l' (Beranda, Cicilan, dll) digunakan untuk judul (title tooltip), bukan teks layar
   const tabs = [['home', 'Beranda', '🏠'], ['inst', 'Cicilan', '🏦'], ['fab', '', ''], ['sav', 'Tabungan', '💸'], ['accs', 'Rekening', '🏛️']];
   const navHtml = `<nav>${tabs.map(([k, l, ic]) => k === 'fab'
     ? `<button class="fab" onclick="toggleAddSheet(true)">+</button>`
-    : `<button class="${S.tab === k ? 'on' : ''}" onclick="S.tab='${k}';render()">${ic} ${l}</button>`).join('')}</nav>`;
+    : `<button class="${S.tab === k ? 'on' : ''}" onclick="S.tab='${k}';render()" title="${l}">${ic}</button>`).join('')}</nav>`;
+  
   $('app').innerHTML = (S.tab === 'home' ? views.home() : `<div class="wrap">${curBar()}${views[S.tab]()}</div>`) + navHtml + themeSheetHtml() + addSheetHtml();
 }
 
