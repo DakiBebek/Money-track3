@@ -91,18 +91,13 @@ const SUPABASE_URL = 'https://pdwehqekftzjcbtgupdn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkd2VocWVrZnR6amNidGd1cGRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxNzA2MzQsImV4cCI6MjEwNTc0NjYzNH0.nQKP0xtpKa3WKMomfzLnJCNi-QnhWW1UeMamFFYfjQs';
 // ====================================================================
 
-// Inisialisasi Supabase (menunggu defer script ter-load)
 let sb;
 function initSupabase() {
   if (typeof supabase !== 'undefined') {
     sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    // Perbaikan layar blank: Listener Auth diletakkan di sini, 
-    // agar berjalan SETELAH sb diinisialisasi
     sb.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') { CURRENT_USER = session.user; showRecovery = true; authView(); }
     });
-
     boot();
   } else {
     setTimeout(initSupabase, 50);
@@ -159,7 +154,6 @@ async function fetchRates() {
   if (document.querySelector('nav')) render();
 }
 
-// Dioptimasi agar tidak menghapus nol jika pakai format visual (titik/koma di input)
 function parseAmt(raw) {
   let s = String(raw || '').trim();
   if (CUR === 'IDR' || CUR === 'JPY') s = s.replace(/\./g, ''); else s = s.replace(/,/g, '');
@@ -195,7 +189,7 @@ function shiftMonth(m, n) { const [y, mo] = m.split('-').map(Number); const d = 
 let S = { acc: [], tx: [], inst: [], sav: [], mv: [], bud: [], rec: [], tab: 'home', month: ym(new Date()) };
 
 const THEMES = {
-  modern: { label: 'Modern (Biru)', swatch: '#3b82f6', vars: { '--bg': '#f4f6f8', '--card': '#fff', '--ink': '#0f172a', '--mute': '#64748b', '--line': '#e2e8f0', '--main': '#3b82f6', '--main2': '#2563eb', '--in': '#10b981', '--out': '#ef4444', '--hero1': '#3b82f6', '--hero2': '#1d4ed8', '--hero-ink': '#fff', '--hero-mute: 'rgba(255,255,255,.8)', '--hero-chip': 'rgba(255,255,255,.2)', '--hero-border': 'none', '--font': "'Inter',-apple-system,sans-serif" } },
+  modern: { label: 'Modern (Biru)', swatch: '#3b82f6', vars: { '--bg': '#f4f6f8', '--card': '#fff', '--ink': '#0f172a', '--mute': '#64748b', '--line': '#e2e8f0', '--main': '#3b82f6', '--main2': '#2563eb', '--in': '#10b981', '--out': '#ef4444', '--hero1': '#3b82f6', '--hero2': '#1d4ed8', '--hero-ink': '#fff', '--hero-mute': 'rgba(255,255,255,.8)', '--hero-chip': 'rgba(255,255,255,.2)', '--hero-border': 'none', '--font': "'Inter',-apple-system,sans-serif" } },
   klasik: { label: 'Klasik (Hijau)', swatch: '#10b981', vars: { '--bg': '#f0fdf4', '--card': '#fff', '--ink': '#064e3b', '--mute': '#047857', '--line': '#d1fae5', '--main': '#10b981', '--main2': '#059669', '--in': '#10b981', '--out': '#ef4444', '--hero1': '#059669', '--hero2': '#065f46', '--hero-ink': '#fff', '--hero-mute': 'rgba(255,255,255,.8)', '--hero-chip': 'rgba(255,255,255,.2)', '--hero-border': 'none', '--font': "Georgia,serif" } },
   gelap: { label: 'Gelap (Malam)', swatch: '#8b5cf6', vars: { '--bg': '#0f172a', '--card': '#1e293b', '--ink': '#f8fafc', '--mute': '#94a3b8', '--line': '#334155', '--main': '#8b5cf6', '--main2': '#7c3aed', '--in': '#34d399', '--out': '#f87171', '--hero1': '#6d28d9', '--hero2': '#4c1d95', '--hero-ink': '#fff', '--hero-mute': 'rgba(255,255,255,.8)', '--hero-chip': 'rgba(255,255,255,.2)', '--hero-border': 'none', '--font': "'Inter',-apple-system,sans-serif" } },
 };
@@ -211,7 +205,6 @@ try { applyTheme(localStorage.getItem('theme') || 'modern'); } catch (e) { apply
 let showThemeSheet = false, CURRENT_USER = null;
 let showAddSheet = false, addMode = null, editing = null;
 
-// ====== OPTIMASI FORMAT NOMINAL REALTIME ======
 function formatInputCurrency(inputEl) {
   if (!inputEl) return;
   inputEl.addEventListener('input', function(e) {
@@ -239,22 +232,26 @@ function toggleAddSheet(v) {
   }
 }
 
-function goAdd(mode) { editing = null; addMode = mode; render(); setTimeout(() => {
-      ['qa_bal', 'qt_amt', 'qf_amt', 'qi_amt', 'qi_tot', 'qs_tgt', 'qb_limit', 'qr_amt', 'm_amt_'].forEach(id => {
-        const el = document.querySelector(`input[id^="${id}"]`);
-        if (el) formatInputCurrency(el);
-      });
-    }, 50); }
+function goAdd(mode) { 
+  editing = null; addMode = mode; render(); 
+  setTimeout(() => {
+    ['qa_bal', 'qt_amt', 'qf_amt', 'qi_amt', 'qi_tot', 'qs_tgt', 'qb_limit', 'qr_amt', 'm_amt_'].forEach(id => {
+      const el = document.querySelector(`input[id^="${id}"]`);
+      if (el) formatInputCurrency(el);
+    });
+  }, 50); 
+}
+
 function editRow(table, id) {
   editing = { table, id };
   addMode = { transactions: 'trx', installments: 'inst', savings: 'sav', accounts: 'accs', budgets: 'budget', recurring: 'recurring' }[table];
   showAddSheet = true; render();
   setTimeout(() => {
-      ['qa_bal', 'qt_amt', 'qf_amt', 'qi_amt', 'qi_tot', 'qs_tgt', 'qb_limit', 'qr_amt', 'm_amt_'].forEach(id => {
-        const el = document.querySelector(`input[id^="${id}"]`);
-        if (el) formatInputCurrency(el);
-      });
-    }, 50);
+    ['qa_bal', 'qt_amt', 'qf_amt', 'qi_amt', 'qi_tot', 'qs_tgt', 'qb_limit', 'qr_amt', 'm_amt_'].forEach(id => {
+      const el = document.querySelector(`input[id^="${id}"]`);
+      if (el) formatInputCurrency(el);
+    });
+  }, 50);
 }
 
 function addSheetHtml() {
@@ -348,6 +345,7 @@ function addSheetHtml() {
     ${body}
   </div></div>`;
 }
+
 function toggleThemeSheet(v) { showThemeSheet = v; render(); }
 function changeMonth(n) { S.month = shiftMonth(S.month, n); render(); }
 function pickMonth(el) { S.month = el.value; render(); }
@@ -909,7 +907,7 @@ async function del(table, id) {
 }
 
 fetchRates();
-initSupabase(); // Panggil fungsi inisialisasi
+initSupabase();
 
 if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {})); }
 </script>
