@@ -859,6 +859,16 @@ html.no-splash #splash-screen {
   </div>
   <!-- Native Home Indicator Bar (Frames 01 to 08) -->
   <div class="splash-home-indicator"></div>
+  <!-- Failsafe safety guard: pasti hilang setelah 2.5 detik -->
+  <script>
+    setTimeout(function() {
+      var sp = document.getElementById('splash-screen');
+      if (sp) {
+        sp.classList.add('splash-exit');
+        setTimeout(function() { if (sp && sp.parentNode) sp.parentNode.removeChild(sp); }, 450);
+      }
+    }, 2500);
+  </script>
 </div>
 
 <main id="app">
@@ -881,7 +891,6 @@ const ICONS = {
   accs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="16" width="20" height="4" rx="1"></rect><path d="M12 4 4 10h16Z"></path><path d="M6 10v6"></path><path d="M10 10v6"></path><path d="M14 10v6"></path><path d="M18 10v6"></path></svg>'
 };
 
-
 // ====== STALE-WHILE-REVALIDATE OFFLINE CACHE ======
 const CACHE_KEY = 'duitku_cache_v2';
 
@@ -890,7 +899,7 @@ function loadFromLocalCache() {
     const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return false;
     const cached = JSON.parse(raw);
-    if (cached && Array.isArray(cached.acc)) {
+    if (cached && Array.isArray(cached.acc) && cached.acc.length) {
       S.acc = cached.acc || [];
       S.tx = cached.tx || [];
       S.inst = cached.inst || [];
@@ -1173,8 +1182,7 @@ try { applyTheme(localStorage.getItem('theme') || 'modern'); } catch (e) { apply
 let showThemeSheet = false, CURRENT_USER = null;
 let showAddSheet = false, addMode = null, editing = null;
 
-
-// ====== INLINE MATH CALCULATOR UNTUK INPUT NOMINAL ======
+// ====== INLINE MATH CALCULATOR ======
 function evalMathExpr(expr) {
   if (!expr) return null;
   const s = String(expr).trim();
@@ -1287,8 +1295,7 @@ function openTransfer() {
   goAdd('transfer');
 }
 
-
-// ====== FITUR DUPLIKASI TRANSAKSI CEPAT ======
+// ====== DUPLIKASI TRANSAKSI ======
 function duplicateTx(id) {
   const t = S.tx.find(x => x.id === id);
   if (!t) return;
@@ -1306,7 +1313,7 @@ function duplicateTx(id) {
     if ($('qt_cat')) $('qt_cat').value = t.category || '';
     if ($('qt_note')) $('qt_note').value = t.note || '';
     if ($('qt_date')) $('qt_date').value = today();
-    toast('Data transaksi disalin. Silakan cek & simpan.', 'info');
+    toast('Data transaksi disalin. Silakan periksa & simpan.', 'info');
   }, 60);
 }
 
@@ -1728,7 +1735,6 @@ function home() {
   const months = [...Array(6)].map((_, i) => shiftMonth(m, i - 5));
   const data = months.map(k => { const x = S.tx.filter(t => t.date.startsWith(k)); return [k, sum(x, 'income'), sum(x, 'expense')]; });
 
-    // Insight Perbandingan Bulan Sebelumnya & Rata-rata Harian
     const prevMonth = shiftMonth(m, -1);
     const prevExp = sum(S.tx.filter(t => t.date.startsWith(prevMonth)), 'expense');
     const dayNum = m === thisMonth ? new Date().getDate() : new Date(m.split('-')[0], m.split('-')[1], 0).getDate();
@@ -1742,7 +1748,7 @@ function home() {
       } else if (diffExp > 0) {
         diffBadge = `<span class="out" style="font-weight:600">⚠️ Pengeluaran naik ${diffPct}% dibanding bulan lalu (+${rp(diffExp)})</span>`;
       } else {
-        diffBadge = `<span class="mute">Sama dengan bulan lalu</span>`;
+        diffBadge = `<span class="mute">Pengeluaran stabil sama dengan bulan lalu</span>`;
       }
     }
 
@@ -1799,7 +1805,6 @@ function home() {
       </button>
     </div>
     ${onboardCard()}
-
     <!-- Smart Financial Insights -->
     <div class="card" style="margin-bottom:16px;background:var(--card-subtle);border:1px solid var(--line)">
       <div class="row">
@@ -1906,145 +1911,7 @@ function home() {
 }
 
 // ====== VIEW: TRANSAKSI DENGAN GROUPING TANGGAL & SUB-TOTAL ======
-let txFilter = { q: '', cat: '', type: '', acc: '', from: '', to: '' }, searchTimeout;
-let txLimit = 40;
-
-function setTxFilter(k, val) { 
-  txFilter[k] = val; 
-  txLimit = 40;
-  if ($('tx_results_container')) {
-    updateTxListLive();
-  } else {
-    render();
-  }
-}
-
-function handleSearch(val) { 
-  txFilter.q = val; 
-  txLimit = 40;
-  clearTimeout(searchTimeout); 
-  searchTimeout = setTimeout(() => { 
-    if ($('tx_results_container')) {
-      updateTxListLive();
-    } else {
-      render();
-    }
-  }, 100); 
-}
-
-function clearTxFilter() { 
-  txFilter = { q: '', cat: '', type: '', acc: '', from: '', to: '' }; 
-  txLimit = 40;
-  render(); 
-}
-
-function loadMoreTx() {
-  txLimit += 40;
-  updateTxListLive();
-}
-
-function filterTxData() {
-  let list = S.tx;
-  const f = txFilter;
-  if (f.q) { 
-    const q = f.q.toLowerCase(); 
-    list = list.filter(t => (t.category || '').toLowerCase().includes(q) || (t.note || '').toLowerCase().includes(q) || accName(t.account_id).toLowerCase().includes(q)); 
-  }
-  if (f.cat) list = list.filter(t => (t.category || 'Lainnya') === f.cat);
-  if (f.type) list = list.filter(t => t.type === f.type);
-  if (f.acc) list = list.filter(t => t.account_id === f.acc);
-  if (f.from) list = list.filter(t => t.date >= f.from);
-  if (f.to) list = list.filter(t => t.date <= f.to);
-  return list;
-}
-
-function renderTxItemsHtml(list) {
-  const active = txFilter.q || txFilter.cat || txFilter.type || txFilter.acc || txFilter.from || txFilter.to;
-  const displayList = list.slice(0, txLimit);
-  
-  const groups = {};
-  displayList.forEach(t => {
-    if (!groups[t.date]) groups[t.date] = [];
-    groups[t.date].push(t);
-  });
-
-  if (!Object.keys(groups).length) {
-    return `<div class="card mute" style="text-align:center;padding:32px">
-      ${active ? 'Tidak ada transaksi yang cocok dengan filter pencarian.' : 'Belum ada transaksi. Tekan tombol <b>+</b> di bawah untuk mencatat transaksi baru.'}
-    </div>`;
-  }
-
-  const itemsHtml = Object.entries(groups).map(([date, items]) => {
-    const dayInc = sum(items, 'income'), dayExp = sum(items, 'expense');
-    const dObj = new Date(date + 'T00:00:00');
-    const dayLabel = date === today() ? 'Hari Ini' : dObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' });
-    
-    return `<div style="margin-bottom:18px">
-      <div class="row" style="padding:0 4px 6px;border-bottom:1px solid var(--line);margin-bottom:8px">
-        <span style="font-size:12px;font-weight:700;color:var(--ink)">${dayLabel} <span class="mute" style="font-weight:400;font-size:11px">(${date})</span></span>
-        <div class="mute" style="font-size:11px;display:flex;gap:8px">
-          ${dayInc > 0 ? `<span class="in">+${rp(dayInc)}</span>` : ''}
-          ${dayExp > 0 ? `<span class="out">-${rp(dayExp)}</span>` : ''}
-        </div>
-      </div>
-      ${items.map(t => {
-        const isExpense = t.type === 'expense';
-        const isTransfer = t.category === 'Transfer';
-        return `<div class="tx-item" style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:var(--radius-md);margin-bottom:6px;background:var(--card);border:1px solid var(--line);cursor:pointer" onclick="editRow('transactions','${t.id}')">
-          <div style="display:flex;align-items:center;gap:10px;min-width:0">
-            <div style="width:36px;height:36px;border-radius:10px;background:${isTransfer ? 'var(--card-subtle)' : isExpense ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)'};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">
-              ${isTransfer ? '🔁' : catIcon(t.category || 'Lainnya')}
-            </div>
-            <div style="min-width:0">
-              <b style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13.5px">${esc(t.category || (isExpense ? 'Pengeluaran' : 'Pemasukan'))}</b>
-              <div class="mute" style="font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                ${accName(t.account_id)}${t.note ? ' · ' + esc(t.note) : ''}
-              </div>
-            </div>
-          </div>
-          <div style="text-align:right;flex-shrink:0;padding-left:8px">
-            <b class="${isExpense ? 'out' : 'in'}" style="font-size:14px;font-family:'JetBrains Mono',monospace">
-              ${isExpense ? '-' : '+'}${rp(t.amount)}
-            </b>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`;
-  }).join('');
-
-  const moreBtn = list.length > txLimit ? `
-    <div style="text-align:center;margin:16px 0 24px">
-      <button class="outline" onclick="loadMoreTx()" style="padding:10px 24px;font-size:13px;border-radius:99px">
-        ⬇️ Tampilkan Lebih Banyak (Tersisa ${list.length - txLimit})
-      </button>
-    </div>
-  ` : '';
-
-  return itemsHtml + moreBtn;
-}
-
-function updateTxListLive() {
-  const container = $('tx_results_container');
-  if (!container) return;
-  const list = filterTxData();
-  container.innerHTML = renderTxItemsHtml(list);
-  
-  const filInc = sum(list, 'income'), filExp = sum(list, 'expense');
-  const banner = $('tx_summary_banner');
-  if (banner) {
-    const active = txFilter.q || txFilter.cat || txFilter.type || txFilter.acc || txFilter.from || txFilter.to;
-    if (active) {
-      banner.style.display = 'flex';
-      banner.innerHTML = `<span>Masuk: <b class="in">${rp(filInc)}</b></span>
-        <span>Keluar: <b class="out">${rp(filExp)}</b></span>
-        <button class="ghost" style="padding:2px 6px;font-size:11px" onclick="clearTxFilter()">Reset Filter</button>`;
-    } else {
-      banner.style.display = 'none';
-      banner.innerHTML = '';
-    }
-  }
-}
-
+let txFilter = { q: '', cat: '', from: '', to: '' }, searchTimeout;
 function setTxFilter(k, val) { txFilter[k] = val; render(); }
 function handleSearch(val) { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { setTxFilter('q', val); }, 250); }
 function clearTxFilter() { txFilter = { q: '', cat: '', from: '', to: '' }; render(); }
@@ -2052,46 +1919,180 @@ function clearTxFilter() { txFilter = { q: '', cat: '', from: '', to: '' }; rend
 function trx() {
   if (!S.acc.length) return `<h1>Transaksi</h1><div class="card" style="text-align:center;padding:30px">Belum ada rekening terdaftar. Tambahkan rekening terlebih dahulu lewat tombol <b>+</b> di bawah.</div>`;
   const cats = [...new Set(S.tx.map(t => t.category || 'Lainnya'))].sort();
-  const list = filterTxData();
+  let list = S.tx;
   const f = txFilter;
-  const active = f.q || f.cat || f.type || f.acc || f.from || f.to;
+  if (f.q) { const q = f.q.toLowerCase(); list = list.filter(t => (t.category || '').toLowerCase().includes(q) || (t.note || '').toLowerCase().includes(q) || accName(t.account_id).toLowerCase().includes(q)); }
+  if (f.cat) list = list.filter(t => (t.category || 'Lainnya') === f.cat);
+  if (f.from) list = list.filter(t => t.date >= f.from);
+  if (f.to) list = list.filter(t => t.date <= f.to);
+  const active = f.q || f.cat || f.from || f.to;
+  
   const filInc = sum(list, 'income'), filExp = sum(list, 'expense');
 
+  // Group by date
+  const groups = {};
+  list.slice(0, active ? 300 : 80).forEach(t => {
+    if (!groups[t.date]) groups[t.date] = [];
+    groups[t.date].push(t);
+  });
+
   return `<h1>Riwayat Transaksi</h1>
-  <div class="card" style="margin-bottom:16px">
-    <input id="txq" placeholder="🔍 Cari transaksi, merchant, catatan..." value="${esc(f.q)}" oninput="handleSearch(this.value)" autocomplete="off">
-    <div class="row" style="gap:6px">
-      <select onchange="setTxFilter('type', this.value)" style="margin:0;flex:1">
-        <option value="">Semua Tipe</option>
-        <option value="expense" ${f.type === 'expense' ? 'selected' : ''}>🔴 Pengeluaran</option>
-        <option value="income" ${f.type === 'income' ? 'selected' : ''}>🟢 Pemasukan</option>
-      </select>
-      <select onchange="setTxFilter('cat', this.value)" style="margin:0;flex:1">
+  <div class="card">
+    <input id="txq" placeholder="🔍 Cari transaksi, merchant, catatan..." value="${esc(f.q)}" oninput="handleSearch(this.value)">
+    <div class="row">
+      <select onchange="setTxFilter('cat', this.value)" style="margin:0">
         <option value="">Semua Kategori</option>
         ${cats.map(c => `<option value="${esc(c)}" ${f.cat === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}
       </select>
     </div>
-    <div class="row" style="margin-top:6px;gap:6px">
-      <select onchange="setTxFilter('acc', this.value)" style="margin:0;flex:1">
-        <option value="">Semua Rekening</option>
-        ${S.acc.map(a => `<option value="${a.id}" ${f.acc === a.id ? 'selected' : ''}>${esc(a.name)}</option>`).join('')}
-      </select>
-      <div style="display:flex;gap:4px;flex:1">
-        <input type="date" value="${f.from}" onchange="setTxFilter('from', this.value)" style="margin:0;flex:1;font-size:11px;padding:6px" title="Dari tanggal">
-        <input type="date" value="${f.to}" onchange="setTxFilter('to', this.value)" style="margin:0;flex:1;font-size:11px;padding:6px" title="Sampai tanggal">
+    <div class="row" style="margin-top:6px">
+      <input type="date" value="${f.from}" onchange="setTxFilter('from', this.value)" style="margin:0" title="Dari tanggal">
+      <input type="date" value="${f.to}" onchange="setTxFilter('to', this.value)" style="margin:0" title="Sampai tanggal">
+    </div>
+    ${active ? `
+      <div class="row mute" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:12px">
+        <span>Masuk: <b class="in">${rp(filInc)}</b></span>
+        <span>Keluar: <b class="out">${rp(filExp)}</b></span>
+        <button class="ghost" style="padding:2px 6px;font-size:11px" onclick="clearTxFilter()">Reset</button>
       </div>
-    </div>
-    <div id="tx_summary_banner" class="row mute" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--line);font-size:12px;${active ? 'display:flex' : 'display:none'}">
-      <span>Masuk: <b class="in">${rp(filInc)}</b></span>
-      <span>Keluar: <b class="out">${rp(filExp)}</b></span>
-      <button class="ghost" style="padding:2px 6px;font-size:11px" onclick="clearTxFilter()">Reset</button>
-    </div>
+    ` : ''}
   </div>
 
-  <div id="tx_results_container">
-    ${renderTxItemsHtml(list)}
-  </div>`;
-}).join('') || `<div class="card mute" style="text-align:center;padding:24px">Tidak ada cicilan ${instFilter === 'active' ? 'aktif' : 'yang sudah lunas'}.</div>`;
+  ${Object.keys(groups).length ? Object.entries(groups).map(([date, items]) => {
+    const dayInc = sum(items, 'income'), dayExp = sum(items, 'expense');
+    const dObj = new Date(date + 'T00:00:00');
+    const dayLabel = date === today() ? 'Hari Ini' : dObj.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
+    return `
+      <div class="tx-group-header">
+        <span>${dayLabel} <span class="mute" style="font-size:10.5px">(${date})</span></span>
+        <span>${dayInc ? `<span class="in">+${rp(dayInc)}</span> ` : ''}${dayExp ? `<span class="out">-${rp(dayExp)}</span>` : ''}</span>
+      </div>
+      ${items.map(t => `
+        <div class="card row" style="padding:12px 16px;margin-bottom:8px">
+          <div class="txitem" style="cursor:pointer;flex:1" onclick="editRow('transactions','${t.id}')">
+            <div class="icon">${catIcon(t.category)}</div>
+            <div>
+              <b>${esc(t.category || 'Lainnya')}</b>
+              ${t.note ? `<span class="mute">· ${esc(t.note)}</span>` : ''}
+              <div class="mute" style="font-size:11.5px;margin-top:1px"><b>${esc(accName(t.account_id))}</b></div>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <b class="${t.type === 'income' ? 'in' : 'out'}" style="font-size:14.5px">${t.type === 'income' ? '+' : '-'}${rp(t.amount)}</b><br>
+            <button class="ghost danger" style="padding:2px 6px;font-size:10.5px" onclick="del('transactions','${t.id}')">Hapus</button>
+          </div>
+        </div>
+      `).join('')}
+    `;
+  }).join('') : '<div class="card mute" style="text-align:center;padding:24px">Tidak ada transaksi ditemukan.</div>'}
+
+  ${S.rec.length ? `
+    <h2>
+      <span>Transaksi Rutin Terjadwal</span>
+      <span class="mute" style="font-weight:500;cursor:pointer" onclick="goAdd('recurring')">+ Tambah</span>
+    </h2>
+    ${S.rec.map(r => `
+      <div class="card row" style="cursor:pointer" onclick="editRow('recurring','${r.id}')">
+        <div>
+          <b>${esc(r.name)}</b> <span class="mute">· Jatuh tempo tgl ${r.day_of_month}</span>
+          <div class="mute">${esc(accName(r.account_id))}${r.category ? ' · ' + esc(r.category) : ''}</div>
+        </div>
+        <div style="text-align:right">
+          <b class="${r.type === 'income' ? 'in' : 'out'}">${r.type === 'income' ? '+' : '-'}${rp(r.amount)}</b>
+        </div>
+      </div>
+    `).join('')}
+  ` : ''}`;
+}
+
+// ====== VIEW: REKENING & DOMPET DIGITAL ======
+function accs() {
+  return `<h1>Rekening & Dompet</h1>
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button style="flex:1" onclick="goAdd('accs')">+ Tambah Rekening</button>
+    <button class="outline" style="flex:1" onclick="openTransfer()">🔁 Transfer Saldo</button>
+  </div>
+
+  ${S.acc.map(a => `
+    <div class="acc-card">
+      <div class="row">
+        <div>
+          <span class="badge">Akun Rekening</span>
+          <b style="font-size:16px;display:block;margin-top:4px">${esc(a.name)}</b>
+        </div>
+        <div style="display:flex;gap:4px">
+          <button class="ghost" onclick="editRow('accounts','${a.id}')">Edit</button>
+          <button class="ghost danger" onclick="del('accounts','${a.id}')">Hapus</button>
+        </div>
+      </div>
+      <div class="row" style="margin-top:14px;align-items:flex-end">
+        <div>
+          <div class="mute" style="font-size:11px;text-transform:uppercase">Saldo Tersedia</div>
+          <div class="big" style="font-size:24px;margin-top:2px">${rp(accBal(a))}</div>
+        </div>
+        <button class="ghost" style="color:var(--main);font-size:12px" onclick="filterByAcc('${a.id}')">Lihat Mutasi ›</button>
+      </div>
+    </div>
+  `).join('') || '<div class="card mute" style="text-align:center;padding:30px">Belum ada rekening. Tekan tombol di atas untuk membuat rekening baru.</div>'}`;
+}
+
+function filterByAcc(accId) {
+  const acc = S.acc.find(a => a.id === accId);
+  if (acc) {
+    txFilter = { q: acc.name, cat: '', from: '', to: '' };
+    S.tab = 'trx';
+    render();
+  }
+}
+
+// ====== VIEW: CICILAN (INSTALLMENTS) ======
+let instFilter = 'active'; // 'active' | 'done'
+function setInstFilter(f) { instFilter = f; render(); }
+
+function inst() {
+  const activeList = S.inst.filter(i => i.paid_months < i.total_months);
+  const doneList = S.inst.filter(i => i.paid_months >= i.total_months);
+  const currentList = instFilter === 'active' ? activeList : doneList;
+
+  const totRemaining = activeList.reduce((s, i) => s + (i.total_months - i.paid_months) * i.monthly_amount, 0);
+  const totMonthly = activeList.reduce((s, i) => s + +i.monthly_amount, 0);
+
+  const listHtml = currentList.map(i => {
+    const left = i.total_months - i.paid_months, pct = Math.min(100, i.paid_months / i.total_months * 100);
+    // Estimasi tgl lunas
+    const estDate = new Date();
+    estDate.setMonth(estDate.getMonth() + left);
+    const estLabel = estDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+
+    return `<div class="card">
+      <div class="row" style="cursor:pointer" onclick="editRow('installments','${i.id}')">
+        <div>
+          <b style="font-size:15.5px">${esc(i.name)}</b>
+          <div class="mute">${esc(accName(i.account_id))}</div>
+        </div>
+        <div style="text-align:right">
+          <b class="out" style="font-size:15.5px">${rp(i.monthly_amount)}</b>
+          <div class="mute" style="font-size:11px">/bulan</div>
+        </div>
+      </div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="row mute" style="font-size:12px">
+        <span>${i.paid_months} / ${i.total_months} bulan (${Math.round(pct)}%)</span>
+        <b style="color:var(--ink)">${left > 0 ? left + ' bulan lagi' : '🎉 LUNAS'}</b>
+      </div>
+      <div class="row mute" style="margin-top:6px;font-size:11.5px">
+        <span>Sisa: <b>${rp(left * i.monthly_amount)}</b></span>
+        ${left > 0 ? `<span>Est. Lunas: <b>${estLabel}</b></span>` : ''}
+      </div>
+      <div class="row" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
+        ${left > 0 ? `<button onclick="pay('${i.id}')">Bayar Bulan Ini</button>` : '<span></span>'}
+        <div>
+          <button class="ghost" onclick="editRow('installments','${i.id}')">Edit</button>
+          <button class="ghost danger" onclick="del('installments','${i.id}')">Hapus</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('') || `<div class="card mute" style="text-align:center;padding:24px">Tidak ada cicilan ${instFilter === 'active' ? 'aktif' : 'yang sudah lunas'}.</div>`;
 
   return `<h1>Cicilan & Pinjaman</h1>
   <div class="card" style="border-left:4px solid var(--out)">
@@ -2293,7 +2294,6 @@ async function importCsv(file) {
 }
 
 // ====== EXCEL EXPORT ======
-
 // ====== CETAK / SIMPAN LAPORAN PDF BULANAN ======
 function printMonthlyReport(m) {
   m = m || S.month;
@@ -2303,7 +2303,7 @@ function printMonthlyReport(m) {
   
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
-    toast('Pop-up terblokir di browser Anda. Izinkan pop-up untuk mencetak PDF.', 'warn');
+    toast('Pop-up terblokir. Izinkan pop-up di browser untuk mencetak PDF.', 'warn');
     return;
   }
   printWindow.document.write(`<!doctype html>
