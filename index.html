@@ -836,6 +836,31 @@ html.no-splash #splash-screen {
   background: var(--splash-ink);
   opacity: 0.22;
 }
+
+/* Profile Avatar */
+.user-avatar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+.user-avatar-btn:hover {
+  transform: scale(1.06);
+}
+.user-avatar-btn:active {
+  transform: scale(0.96);
+}
+.avatar-preset-btn {
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.avatar-preset-btn:hover {
+  transform: scale(1.15);
+  background: var(--card-hover) !important;
+}
+
 </style>
 
 </head>
@@ -1486,9 +1511,189 @@ function themeListHtml() {
     </div>`).join('');
 }
 
+
+// ====== FOTO PROFIL & AVATAR PENGGUNA ======
+const PRESET_AVATARS = ['💼', '🦊', '🐼', '🦁', '🚀', '💎', '🐱', '☕'];
+
+function avatarImgHtml(u, size = 32) {
+  const av = u && u.user_metadata && u.user_metadata.avatar_url;
+  const uname = (u && u.user_metadata && u.user_metadata.username) || '';
+  const email = (u && u.email) || 'User';
+  const name = uname || email;
+  const initial = (name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 1) || 'U').toUpperCase();
+  
+  if (av) {
+    if (av.length <= 4 && !av.startsWith('http') && !av.startsWith('data:')) {
+      return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:var(--card-subtle);display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.52)}px;border:1px solid var(--line);box-shadow:var(--shadow-sm);flex-shrink:0">${av}</div>`;
+    }
+    return `<img src="${esc(av)}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;border:2px solid var(--main);box-shadow:var(--shadow-sm);flex-shrink:0" alt="Avatar">`;
+  }
+  
+  return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:linear-gradient(135deg,var(--main),var(--main2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:${Math.round(size*0.42)}px;box-shadow:var(--shadow-sm);flex-shrink:0;text-transform:uppercase">${esc(initial)}</div>`;
+}
+
+function userAvatarBtn(size = 32) {
+  return `<div class="user-avatar-btn" onclick="toggleThemeSheet(true);setSettingsTab('akun')" title="Profil & Foto Akun">
+    ${avatarImgHtml(CURRENT_USER, size)}
+  </div>`;
+}
+
+function compressImageToAvatar(file, targetSize = 200) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = targetSize;
+        canvas.height = targetSize;
+        const ctx = canvas.getContext('2d');
+        const minDim = Math.min(img.width, img.height);
+        const sx = (img.width - minDim) / 2;
+        const sy = (img.height - minDim) / 2;
+        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
+        try {
+          resolve(canvas.toDataURL('image/webp', 0.85));
+        } catch(err) {
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        }
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadProfilePhoto(file) {
+  if (!file) return;
+  if (!CURRENT_USER) return toast('Harap login terlebih dahulu', 'warn');
+  
+  const statusEl = document.getElementById('pf_avatar_status');
+  if (statusEl) statusEl.innerHTML = '<span class="mute">⏳ Mengompres & mengunggah foto...</span>';
+  
+  try {
+    const compressedDataUrl = await compressImageToAvatar(file, 200);
+    let finalAvatarUrl = compressedDataUrl;
+
+    try {
+      const blob = await (await fetch(compressedDataUrl)).blob();
+      const ext = 'webp';
+      const filePath = `${CURRENT_USER.id}/avatar-${Date.now()}.${ext}`;
+      const { data: stData, error: stErr } = await sb.storage.from('avatars').upload(filePath, blob, {
+        upsert: true,
+        contentType: 'image/webp'
+      });
+      if (!stErr) {
+        const { data: pubData } = sb.storage.from('avatars').getPublicUrl(filePath);
+        if (pubData && pubData.publicUrl) finalAvatarUrl = pubData.publicUrl;
+      }
+    } catch(stCatch) {
+      console.warn('Storage bucket fallback:', stCatch);
+    }
+
+    const { data: authData, error: authErr } = await sb.auth.updateUser({
+      data: { avatar_url: finalAvatarUrl }
+    });
+    if (authErr) throw authErr;
+
+    try {
+      await sb.from('profiles').upsert({
+        id: CURRENT_USER.id,
+        avatar_url: finalAvatarUrl,
+        username: (CURRENT_USER.user_metadata && CURRENT_USER.user_metadata.username) || '',
+        updated_at: new Date().toISOString()
+      });
+    } catch(e) {}
+
+    CURRENT_USER = authData.user;
+    saveToLocalCache();
+    toast('Foto profil berhasil diperbarui!', 'success');
+    render();
+  } catch(err) {
+    console.error('Upload avatar error:', err);
+    toast('Gagal mengunggah foto: ' + err.message, 'error');
+  } finally {
+    if (statusEl) statusEl.innerHTML = '';
+  }
+}
+
+async function setPresetAvatar(av) {
+  if (!CURRENT_USER) return;
+  try {
+    const { data: authData, error: authErr } = await sb.auth.updateUser({
+      data: { avatar_url: av }
+    });
+    if (authErr) throw authErr;
+
+    try {
+      await sb.from('profiles').upsert({
+        id: CURRENT_USER.id,
+        avatar_url: av,
+        username: (CURRENT_USER.user_metadata && CURRENT_USER.user_metadata.username) || '',
+        updated_at: new Date().toISOString()
+      });
+    } catch(e) {}
+
+    CURRENT_USER = authData.user;
+    saveToLocalCache();
+    toast('Avatar profil berhasil diubah!', 'success');
+    render();
+  } catch(err) {
+    toast('Gagal mengubah avatar: ' + err.message, 'error');
+  }
+}
+
+async function removeAvatar() {
+  if (!CURRENT_USER) return;
+  try {
+    const { data: authData, error: authErr } = await sb.auth.updateUser({
+      data: { avatar_url: null }
+    });
+    if (authErr) throw authErr;
+
+    try {
+      await sb.from('profiles').upsert({
+        id: CURRENT_USER.id,
+        avatar_url: null,
+        updated_at: new Date().toISOString()
+      });
+    } catch(e) {}
+
+    CURRENT_USER = authData.user;
+    saveToLocalCache();
+    toast('Foto profil dihapus', 'info');
+    render();
+  } catch(err) {
+    toast('Gagal menghapus foto: ' + err.message, 'error');
+  }
+}
+
 function accountHtml() {
   const u = CURRENT_USER, uname = (u && u.user_metadata && u.user_metadata.username) || '';
-  return `<div class="mute" style="margin-bottom:12px">Login sebagai: <b>${esc(u ? u.email : '')}</b></div>
+  return `
+    <!-- Foto Profil Pengguna -->
+    <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line)">
+      <div style="position:relative;width:86px;height:86px;cursor:pointer" onclick="document.getElementById('avatarFileInput').click()" title="Ketuk untuk ganti foto profil">
+        ${avatarImgHtml(u, 86)}
+        <div style="position:absolute;bottom:0;right:0;width:28px;height:28px;border-radius:50%;background:var(--main);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:var(--shadow-sm);border:2px solid var(--card)">📷</div>
+      </div>
+      <input id="avatarFileInput" type="file" accept="image/*" style="display:none" onchange="uploadProfilePhoto(this.files[0])">
+      <div id="pf_avatar_status" style="font-size:12px;margin-top:4px"></div>
+      
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="outline" style="font-size:12px;padding:6px 14px" onclick="document.getElementById('avatarFileInput').click()">Unggah Foto</button>
+        ${u && u.user_metadata && u.user_metadata.avatar_url ? `<button class="ghost danger" style="font-size:12px;padding:6px 10px" onclick="removeAvatar()">Hapus</button>` : ''}
+      </div>
+
+      <div class="mute" style="font-size:11px;margin:12px 0 6px;text-align:center">Atau pilih avatar karakter siap pakai:</div>
+      <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
+        ${PRESET_AVATARS.map(av => `<button type="button" class="avatar-preset-btn" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card-subtle);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="setPresetAvatar('${av}')" title="Gunakan avatar ${av}">${av}</button>`).join('')}
+      </div>
+    </div>
+
+    <div class="mute" style="margin-bottom:8px">Login sebagai: <b>${esc(u ? u.email : '')}</b></div>
     <input id="pf_uname" placeholder="Nama pengguna / Username" value="${esc(uname)}">
     <button style="width:100%;margin-top:6px" onclick="saveUsername()">Perbarui Username</button>
     <div class="mute" style="margin:18px 0 6px">Integrasi AI Scanner Struk (Google Gemini)</div>
@@ -1600,7 +1805,7 @@ function authView() {
   safeDismissSplash();
   if (showRecovery) { $('app').innerHTML = recoveryHtml(); return; }
   $('app').innerHTML = `
-  <div style="position:absolute;top:16px;right:16px">${gearBtn()}</div>
+  <div style="position:absolute;top:16px;right:16px">${userAvatarBtn(28)} ${gearBtn()}</div>
   ${themeSheetHtml()}
   <div class="wrap" style="padding-top:40px">
     <div style="text-align:center;margin-bottom:28px">
@@ -1762,10 +1967,16 @@ function home() {
 
   return `<div class="hero">
     <div class="row">
-      <span class="greet">Duitku Financial</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        ${userAvatarBtn(38)}
+        <div>
+          <span class="greet" style="font-size:13px;display:block">Halo, <b>${esc((CURRENT_USER && CURRENT_USER.user_metadata && CURRENT_USER.user_metadata.username) || 'Kawan')}</b> 👋</span>
+          <span class="mute" style="font-size:10.5px;color:var(--hero-mute)">Duitku Financial</span>
+        </div>
+      </div>
       <div style="display:flex;gap:8px;align-items:center">
         <button class="gear" onclick="togglePrivacy()" title="Privasi Saldo">${HIDE_NUMS ? '👁️' : '🙈'}</button>
-        <button class="gear" onclick="toggleThemeSheet(true)">⚙️</button>
+        <button class="gear" onclick="toggleThemeSheet(true)" title="Pengaturan">⚙️</button>
       </div>
     </div>
     
