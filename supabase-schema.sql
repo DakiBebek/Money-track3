@@ -33,7 +33,11 @@ create policy "Users can update own profile"
 
 -- Otomatis buat profil saat pengguna baru mendaftar di Supabase Auth
 create or replace function public.handle_new_user()
-returns trigger as $$
+returns trigger 
+language plpgsql 
+security definer
+set search_path = public, auth
+as $$
 begin
   insert into public.profiles (id, username, avatar_url)
   values (
@@ -44,7 +48,9 @@ begin
   on conflict (id) do nothing;
   return new;
 end;
-$$ language plpgsql security definer;
+$$;
+
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
 
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
