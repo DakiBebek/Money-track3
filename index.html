@@ -861,6 +861,270 @@ html.no-splash #splash-screen {
   background: var(--card-hover) !important;
 }
 
+
+/* === FINTECH UI UPGRADE === */
+.type-toggle-group {
+  display: flex;
+  background: var(--card-subtle);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  gap: 4px;
+  margin: 8px 0 12px;
+  border: 1px solid var(--line);
+}
+.type-btn {
+  flex: 1;
+  background: transparent;
+  color: var(--mute);
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: none;
+}
+.type-btn:hover {
+  color: var(--ink);
+  background: rgba(0, 0, 0, 0.03);
+}
+.type-btn.active.exp-btn {
+  background: var(--card);
+  color: var(--out);
+  box-shadow: var(--shadow-sm);
+}
+.type-btn.active.inc-btn {
+  background: var(--card);
+  color: var(--in);
+  box-shadow: var(--shadow-sm);
+}
+.type-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.exp-btn .type-dot { background: var(--out); }
+.inc-btn .type-dot { background: var(--in); }
+
+/* Grouped Date Transaction Container */
+.tx-group-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.tx-group-card:hover {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-md);
+}
+.tx-group-header {
+  padding: 12px 16px 10px;
+  background: var(--card-subtle);
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mute);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.tx-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  gap: 12px;
+  transition: background 0.15s ease;
+  position: relative;
+}
+.tx-row:not(:last-child) {
+  border-bottom: 1px solid var(--line);
+}
+.tx-row:hover {
+  background: var(--card-subtle);
+}
+.tx-row:active {
+  background: var(--card-hover);
+}
+
+/* Category Quick Chip Enhanced */
+.cat-chip {
+  flex: 0 0 auto;
+  background: var(--card-subtle);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.cat-chip:hover {
+  border-color: var(--main);
+  transform: translateY(-1px);
+}
+.cat-chip.active {
+  background: var(--main);
+  border-color: var(--main);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.28);
+}
+
+/* Enhanced Scan Banner */
+.scan-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(99, 102, 241, 0.12) 100%);
+  border: 1.5px dashed var(--main);
+  border-radius: var(--radius-md);
+  margin: 6px 0 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.scan-banner:hover {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.14) 0%, rgba(99, 102, 241, 0.18) 100%);
+  transform: translateY(-1px);
+}
+.scan-banner:active {
+  transform: scale(0.99);
+}
+
+/* Quick Action Tiles */
+.quick-action-tile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  border: 1px solid var(--line);
+}
+.quick-action-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.quick-action-tile:active {
+  transform: translateY(0);
+}
+.quick-action-tile.primary {
+  background: linear-gradient(135deg, var(--main), var(--main2));
+  color: #fff;
+  border: 0;
+}
+.quick-action-tile.secondary {
+  background: var(--card);
+  color: var(--ink);
+}
+.quick-action-tile .qa-icon {
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.quick-action-tile.secondary .qa-icon {
+  background: var(--card-subtle);
+}
+.quick-action-tile b {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.quick-action-tile .qa-sub {
+  font-size: 11px;
+  opacity: 0.8;
+  display: block;
+  margin-top: 2px;
+}
+
+/* Financial Insights Card */
+.insights-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.insights-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, var(--main), var(--main2));
+}
+.insights-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--main-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.pill-badge {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--card-subtle);
+  border: 1px solid var(--line);
+  color: var(--ink-secondary);
+}
+
+/* Account Card Digital Styling */
+.acc-card-chip {
+  width: 30px;
+  height: 22px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #d4af37 0%, #f5d77f 100%);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Bottom Nav Indicator Dot */
+nav button {
+  position: relative;
+}
+nav button.on::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--main);
+}
+
 </style>
 
 </head>
@@ -1356,9 +1620,22 @@ function editRow(table, id) {
 
 // ====== QUICK CATEGORY SELECTOR ======
 const QUICK_CATS = ['Makan', 'Transport', 'Belanja', 'Gaji', 'Tagihan', 'Hiburan', 'Kesehatan', 'Pendidikan'];
-function pickCat(c, targetId) {
+function selectTxType(type, btn) {
+  const hidden = document.getElementById('qt_type');
+  if (hidden) hidden.value = type;
+  if (btn && btn.parentElement) {
+    btn.parentElement.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+}
+
+function pickCat(c, targetId, chipEl) {
   const el = $(targetId);
   if (el) { el.value = c; el.focus(); }
+  if (chipEl && chipEl.parentElement) {
+    chipEl.parentElement.querySelectorAll('.cat-chip').forEach(ch => ch.classList.remove('active'));
+    chipEl.classList.add('active');
+  }
 }
 
 function addSheetHtml() {
@@ -1400,22 +1677,36 @@ function addSheetHtml() {
   } else if (addMode === 'trx') {
     const ed = editing && editing.table === 'transactions' ? S.tx.find(x => x.id === editing.id) : null;
     body = `${ed ? '' : `
-      <div style="display:flex;gap:6px;margin:4px 0 8px">
-        <button class="scanBtn" style="flex:1;margin:0" onclick="document.getElementById('scanFile').click()">
-          ${GEMINI_API_KEY ? '✨ Scan Struk AI (Gemini Vision)' : '📷 Scan Struk (OCR)'}
-        </button>
-        <button class="outline" style="font-size:12px;padding:8px 12px;white-space:nowrap" onclick="promptGeminiKey()" title="Atur Google Gemini API Key">
+      <div class="scan-banner" onclick="document.getElementById('scanFile').click()">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:var(--shadow-sm)">
+            ${GEMINI_API_KEY ? '✨' : '📷'}
+          </div>
+          <div>
+            <b style="font-size:13px;color:var(--ink);display:block">${GEMINI_API_KEY ? 'Scan Struk AI (Gemini Vision)' : 'Pindai Struk Belanja (OCR)'}</b>
+            <span class="mute" style="font-size:11px">${GEMINI_API_KEY ? 'Otomatis baca total, tanggal & kategori' : 'Ketuk untuk foto atau pilih struk'}</span>
+          </div>
+        </div>
+        <button type="button" class="outline" style="font-size:11px;padding:6px 10px;white-space:nowrap;background:var(--card)" onclick="event.stopPropagation();promptGeminiKey()" title="Atur Google Gemini API Key">
           ${GEMINI_API_KEY ? '🤖 AI Aktif' : '⚡ Pakai AI'}
         </button>
       </div>
       <input id="scanFile" type="file" accept="image/*" style="display:none" onchange="scanReceipt(this.files[0],'qt_')">
       <div id="scanStatus"></div>`}
-      <select id="qt_type"><option value="expense" ${!ed || ed.type === 'expense' ? 'selected' : ''}>Pengeluaran (Keluar)</option><option value="income" ${ed && ed.type === 'income' ? 'selected' : ''}>Pemasukan (Masuk)</option></select>
+      <div class="type-toggle-group">
+        <input type="hidden" id="qt_type" value="${ed ? ed.type : 'expense'}">
+        <button type="button" class="type-btn exp-btn ${!ed || ed.type === 'expense' ? 'active' : ''}" onclick="selectTxType('expense', this)">
+          <span class="type-dot"></span> Pengeluaran
+        </button>
+        <button type="button" class="type-btn inc-btn ${ed && ed.type === 'income' ? 'active' : ''}" onclick="selectTxType('income', this)">
+          <span class="type-dot"></span> Pemasukan
+        </button>
+      </div>
       ${accSel('qt_acc', ed ? ed.account_id : null)}
       <input id="qt_amt" type="text" inputmode="numeric" placeholder="Jumlah (${CUR}), cth: 50.000" value="${ed ? toCurVal(ed.amount) : ''}">
       <input id="qt_cat" placeholder="Kategori (makan, gaji, transport, tagihan...)" value="${ed ? esc(ed.category || '') : ''}">
       <div class="chips-scroll">
-        ${QUICK_CATS.map(c => `<span class="cat-chip" onclick="pickCat('${c}','qt_cat')">${catIcon(c)} ${c}</span>`).join('')}
+        ${QUICK_CATS.map(c => `<span class="cat-chip ${ed && ed.category === c ? 'active' : ''}" onclick="pickCat('${c}','qt_cat',this)">${catIcon(c)} ${c}</span>`).join('')}
       </div>
       <input id="qt_note" placeholder="Catatan tambahan (opsional)" value="${ed ? esc(ed.note || '') : ''}">
       <input id="qt_date" type="date" value="${ed ? ed.date : today()}">
@@ -2007,24 +2298,41 @@ function home() {
   </div>
 
   <div class="wrap" style="padding-top: 44px">
-    <div style="display:flex;gap:10px;margin-bottom:16px">
-      <button style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 10px;font-size:13px;box-shadow:var(--shadow-sm)" onclick="goAdd('trx')">
-        <span>💸</span> Catat Transaksi
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <button class="quick-action-tile primary" onclick="goAdd('trx')">
+        <span class="qa-icon">💸</span>
+        <div style="text-align:left">
+          <b>Catat Transaksi</b>
+          <span class="qa-sub">Masuk atau keluar</span>
+        </div>
       </button>
-      <button class="outline" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 10px;font-size:13px;background:var(--card);box-shadow:var(--shadow-sm)" onclick="openTransfer()">
-        <span>🔁</span> Transfer Saldo
+      <button class="quick-action-tile secondary" onclick="openTransfer()">
+        <span class="qa-icon">🔁</span>
+        <div style="text-align:left">
+          <b>Transfer Saldo</b>
+          <span class="qa-sub">Antar rekening</span>
+        </div>
       </button>
     </div>
     ${onboardCard()}
     <!-- Smart Financial Insights -->
-    <div class="card" style="margin-bottom:16px;background:var(--card-subtle);border:1px solid var(--line)">
-      <div class="row">
-        <b>💡 Analisis Keuangan Bulan Ini</b>
-        <span class="mute" style="font-size:11px">Rata-rata: <b>${rp(dailyAvg)}/hari</b></span>
+    <div class="card insights-card">
+      <div class="row" style="align-items:center">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="insights-icon">💡</div>
+          <div>
+            <b style="font-size:13.5px;color:var(--ink)">Analisis Keuangan</b>
+            <div class="mute" style="font-size:11px">Periode ${label}</div>
+          </div>
+        </div>
+        <span class="pill-badge">Rata-rata: <b>${rp(dailyAvg)}/hari</b></span>
       </div>
-      <div style="font-size:12.5px;margin-top:6px;line-height:1.4">
-        ${diffBadge ? diffBadge + '<br>' : ''}
-        <span class="mute">Sisa likuid aman harian untuk <b>${daysLeft} hari</b> ke depan: <b>${rp(Math.round(total / Math.max(1, daysLeft)))}/hari</b></span>
+      <div style="font-size:12.5px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);line-height:1.5">
+        ${diffBadge ? `<div style="margin-bottom:6px">${diffBadge}</div>` : ''}
+        <div class="mute" style="display:flex;align-items:center;gap:6px">
+          <span>🎯</span>
+          <span>Sisa likuid aman: <b>${rp(Math.round(total / Math.max(1, daysLeft)))}/hari</b> (untuk <b>${daysLeft} hari</b> ke depan)</span>
+        </div>
       </div>
     </div>
 
@@ -2174,28 +2482,37 @@ function trx() {
     const dObj = new Date(date + 'T00:00:00');
     const dayLabel = date === today() ? 'Hari Ini' : dObj.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' });
     return `
-      <div class="tx-group-header">
-        <span>${dayLabel} <span class="mute" style="font-size:10.5px">(${date})</span></span>
-        <span>${dayInc ? `<span class="in">+${rp(dayInc)}</span> ` : ''}${dayExp ? `<span class="out">-${rp(dayExp)}</span>` : ''}</span>
-      </div>
-      ${items.map(t => `
-        <div class="card row" style="padding:12px 16px;margin-bottom:8px">
-          <div class="txitem" style="cursor:pointer;flex:1" onclick="editRow('transactions','${t.id}')">
-            <div class="icon">${catIcon(t.category)}</div>
-            <div>
-              <b>${esc(t.category || 'Lainnya')}</b>
-              ${t.note ? `<span class="mute">· ${esc(t.note)}</span>` : ''}
-              <div class="mute" style="font-size:11.5px;margin-top:1px"><b>${esc(accName(t.account_id))}</b></div>
+      <div class="tx-group-card">
+        <div class="tx-group-header">
+          <span>${dayLabel} <span class="mute" style="font-size:10.5px;font-weight:500">· ${date}</span></span>
+          <span style="display:flex;gap:8px">
+            ${dayInc ? `<span class="in" style="font-weight:700">+${rp(dayInc)}</span>` : ''}
+            ${dayExp ? `<span class="out" style="font-weight:700">-${rp(dayExp)}</span>` : ''}
+          </span>
+        </div>
+        ${items.map(t => `
+          <div class="tx-row">
+            <div class="txitem" style="cursor:pointer;flex:1" onclick="editRow('transactions','${t.id}')">
+              <div class="icon">${catIcon(t.category)}</div>
+              <div>
+                <b style="font-size:14px;color:var(--ink)">${esc(t.category || 'Lainnya')}</b>
+                ${t.note ? `<span class="mute" style="font-weight:500"> · ${esc(t.note)}</span>` : ''}
+                <div class="mute" style="font-size:11.5px;margin-top:2px">
+                  <span style="font-weight:600;color:var(--ink-secondary)">${esc(accName(t.account_id))}</span>
+                </div>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <b class="${t.type === 'income' ? 'in' : 'out'}" style="font-size:15px;letter-spacing:-0.01em;cursor:pointer" onclick="editRow('transactions','${t.id}')">${t.type === 'income' ? '+' : '-'}${rp(t.amount)}</b>
+              <div style="margin-top:2px">
+                <button class="ghost danger" style="padding:2px 6px;font-size:10.5px" onclick="event.stopPropagation();del('transactions','${t.id}')">Hapus</button>
+              </div>
             </div>
           </div>
-          <div style="text-align:right">
-            <b class="${t.type === 'income' ? 'in' : 'out'}" style="font-size:14.5px">${t.type === 'income' ? '+' : '-'}${rp(t.amount)}</b><br>
-            <button class="ghost danger" style="padding:2px 6px;font-size:10.5px" onclick="del('transactions','${t.id}')">Hapus</button>
-          </div>
-        </div>
-      `).join('')}
+        `).join('')}
+      </div>
     `;
-  }).join('') : '<div class="card mute" style="text-align:center;padding:24px">Tidak ada transaksi ditemukan.</div>'}
+  }).join('') : '<div class="card mute" style="text-align:center;padding:32px">Tidak ada transaksi ditemukan.</div>'}
 
   ${S.rec.length ? `
     <h2>
@@ -2227,24 +2544,34 @@ function accs() {
   ${S.acc.map(a => `
     <div class="acc-card">
       <div class="row">
-        <div>
-          <span class="badge">Akun Rekening</span>
-          <b style="font-size:16px;display:block;margin-top:4px">${esc(a.name)}</b>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:40px;height:40px;border-radius:12px;background:var(--main-light);color:var(--main);display:flex;align-items:center;justify-content:center;font-size:20px">
+            ${a.name.toLowerCase().includes('tunai') || a.name.toLowerCase().includes('cash') || a.name.toLowerCase().includes('dompet') ? '💵' : '🏦'}
+          </div>
+          <div>
+            <b style="font-size:16px;color:var(--ink);display:block">${esc(a.name)}</b>
+            <span class="mute" style="font-size:11.5px">Rekening Aktif</span>
+          </div>
         </div>
-        <div style="display:flex;gap:4px">
-          <button class="ghost" onclick="editRow('accounts','${a.id}')">Edit</button>
-          <button class="ghost danger" onclick="del('accounts','${a.id}')">Hapus</button>
-        </div>
+        <div class="acc-card-chip" title="Rekening Utama"></div>
       </div>
-      <div class="row" style="margin-top:14px;align-items:flex-end">
-        <div>
-          <div class="mute" style="font-size:11px;text-transform:uppercase">Saldo Tersedia</div>
-          <div class="big" style="font-size:24px;margin-top:2px">${rp(accBal(a))}</div>
+      
+      <div style="margin-top:16px">
+        <div class="mute" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em">Saldo Tersedia</div>
+        <div class="big" style="font-size:26px;margin-top:2px;letter-spacing:-0.02em">${rp(accBal(a))}</div>
+      </div>
+
+      <div class="row" style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line)">
+        <button class="outline" style="font-size:12px;padding:6px 14px;border-radius:999px" onclick="filterByAcc('${a.id}')">
+          📜 Lihat Mutasi
+        </button>
+        <div style="display:flex;gap:4px">
+          <button class="ghost" style="padding:6px 10px;font-size:12px" onclick="editRow('accounts','${a.id}')">Edit</button>
+          <button class="ghost danger" style="padding:6px 10px;font-size:12px" onclick="del('accounts','${a.id}')">Hapus</button>
         </div>
-        <button class="ghost" style="color:var(--main);font-size:12px" onclick="filterByAcc('${a.id}')">Lihat Mutasi ›</button>
       </div>
     </div>
-  `).join('') || '<div class="card mute" style="text-align:center;padding:30px">Belum ada rekening. Tekan tombol di atas untuk membuat rekening baru.</div>'}`;
+  `).join('') || '<div class="card mute" style="text-align:center;padding:32px">Belum ada rekening. Tekan tombol di atas untuk membuat rekening baru.</div>'}`;
 }
 
 function filterByAcc(accId) {
