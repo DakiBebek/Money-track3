@@ -1241,72 +1241,17 @@ function initSupabase() {
 }
 
 
-// ====== SPLASH SCREEN CONTROLLER ======
-let splashAlreadyShown = false;
-try {
-  splashAlreadyShown = !!sessionStorage.getItem('duitku_splash_shown');
-} catch(e) {}
-
-const splashStartTime = Date.now();
-// Hanya terapkan delay animasi saat aplikasi pertama kali dibuka (bukan saat refresh)
-const MIN_SPLASH_TIME = splashAlreadyShown ? 0 : 1300;
-let splashDismissed = false;
-
-// Tandai sesi bahwa splash sudah pernah ditampilkan
-try {
-  sessionStorage.setItem('duitku_splash_shown', '1');
-} catch(e) {}
-
-// Jika sudah pernah tampil di sesi ini (misal saat refresh halaman), singkirkan splash seketika
-if (splashAlreadyShown) {
-  const earlySplash = document.getElementById('splash-screen');
-  if (earlySplash) earlySplash.remove();
-}
-
+// ====== INSTANT LAUNCH (NO SPLASH SCREEN) ======
 function dismissSplash() {
-  if (splashDismissed) return;
-  splashDismissed = true;
-  const splash = document.getElementById('splash-screen');
-  if (!splash) return;
-  
-  if (splashAlreadyShown) {
-    splash.remove();
-    return;
-  }
-  
-  const bar = splash.querySelector('.splash-loader-fill');
-  if (bar) {
-    bar.style.animation = 'none';
-    bar.style.width = '100%';
-    bar.style.transition = 'width 0.25s ease-out';
-  }
-  
-  setTimeout(() => {
-    splash.classList.add('splash-exit');
-    setTimeout(() => {
-      try { splash.remove(); } catch(e) {}
-    }, 450);
-  }, 180);
+  const sp = document.getElementById('splash-screen');
+  if (sp) sp.remove();
 }
 
 function safeDismissSplash() {
-  if (splashAlreadyShown) {
-    dismissSplash();
-    return;
-  }
-  const elapsed = Date.now() - splashStartTime;
-  const remaining = Math.max(0, MIN_SPLASH_TIME - elapsed);
-  setTimeout(dismissSplash, remaining);
+  dismissSplash();
 }
 
-// Fallback keamanan jika koneksi sangat lambat
-if (!splashAlreadyShown) {
-  setTimeout(dismissSplash, 3500);
-}
-
-// Fungsi untuk menguji ulang animasi splash kapan saja dari menu pengaturan
 function replaySplashScreen() {
-  try { sessionStorage.removeItem('duitku_splash_shown'); } catch(e) {}
   location.reload();
 }
 

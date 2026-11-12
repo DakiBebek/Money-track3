@@ -2,13 +2,6 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <script>
-    try {
-      if (sessionStorage.getItem('duitku_splash_shown')) {
-        document.documentElement.classList.add('no-splash');
-      }
-    } catch(e) {}
-  </script>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <title>Duitku — Smart Personal Finance (TypeScript)</title>
   <link rel="manifest" href="/manifest.json">
@@ -25,29 +18,10 @@
 </head>
 <body>
 
-<!-- LUXURY SPLASH SCREEN -->
-<div id="splash-screen" class="splash-screen">
-  <div class="splash-aurora"></div>
-  <div class="splash-glow"></div>
-  <div class="splash-container">
-    <div class="splash-badge">Duitku Financial PWA</div>
-    <div class="splash-logo-wrap">
-      <img class="splash-duitku-icon" src="/icon-512.png" alt="Duitku Logo">
-      <div class="splash-brand-text">
-        <span>duitku</span>
-      </div>
-    </div>
-    <div class="splash-tagline">Solusi Keuangan Pintar &amp; Mandiri</div>
-    <div class="splash-loader-bar">
-      <div class="splash-loader-fill"></div>
-    </div>
-  </div>
-</div>
-
 <main id="app">
   <div class="loading-box">
     <div class="spinner"></div>
-    <div class="mute">Memuat Duitku (TypeScript)...</div>
+    <div class="mute">Memuat Duitku...</div>
   </div>
 </main>
 
