@@ -16,6 +16,9 @@ import type {
   RecurringRow 
 } from './types/database';
 
+declare const ExcelJS: any;
+declare const Tesseract: any;
+
 // ====== DATA SUPABASE ======
 const SUPABASE_URL = 'https://pdwehqekftzjcbtgupdn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBkd2VocWVrZnR6amNidGd1cGRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAxNzA2MzQsImV4cCI6MjEwNTc0NjYzNH0.nQKP0xtpKa3WKMomfzLnJCNi-QnhWW1UeMamFFYfjQs';
@@ -139,8 +142,12 @@ async function loadScript(url, globalVar) {
   });
 }
 
-const $ = id => document.getElementById(id);
-const v = id => $(id) ? $(id).value : '';
+const $ = (id: string) => document.getElementById(id);
+const v = (id: string) => $(id) ? ((document.getElementById(id) as HTMLInputElement).value || '') : '';
+if (typeof window !== 'undefined') {
+  (window as any).$ = $;
+  (window as any).v = v;
+}
 const CURS = ['IDR', 'USD', 'EUR', 'SGD', 'MYR', 'JPY', 'AUD', 'GBP', 'SAR', 'TWD'];
 let CUR = 'IDR', RATES = { IDR: 1 }, RATE_T = null;
 
@@ -475,8 +482,8 @@ function addSheetHtml() {
   } else if (addMode === 'trx') {
     const ed = editing && editing.table === 'transactions' ? S.tx.find(x => x.id === editing.id) : null;
     body = `${ed ? '' : `
-      <div class="scan-banner" onclick="document.getElementById('scanFile').click()">
-        <div style="display:flex;align-items:center;gap:10px">
+      <label for="scanFile" class="scan-banner" style="display:flex;cursor:pointer;position:relative">
+        <div style="display:flex;align-items:center;gap:10px;pointer-events:none">
           <div style="width:36px;height:36px;border-radius:10px;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:var(--shadow-sm)">
             ${GEMINI_API_KEY ? '✨' : '📷'}
           </div>
@@ -485,11 +492,11 @@ function addSheetHtml() {
             <span class="mute" style="font-size:11px">${GEMINI_API_KEY ? 'Otomatis baca total, tanggal & kategori' : 'Ketuk untuk foto atau pilih struk'}</span>
           </div>
         </div>
-        <button type="button" class="outline" style="font-size:11px;padding:6px 10px;white-space:nowrap;background:var(--card)" onclick="event.stopPropagation();promptGeminiKey()" title="Atur Google Gemini API Key">
+        <button type="button" class="outline" style="font-size:11px;padding:6px 10px;white-space:nowrap;background:var(--card);position:relative;z-index:2" onclick="event.preventDefault();event.stopPropagation();promptGeminiKey()" title="Atur Google Gemini API Key">
           ${GEMINI_API_KEY ? '🤖 AI Aktif' : '⚡ Pakai AI'}
         </button>
-      </div>
-      <input id="scanFile" type="file" accept="image/*" style="display:none" onchange="scanReceipt(this.files[0],'qt_')">
+      </label>
+      <input id="scanFile" type="file" accept="image/*" capture="environment" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;opacity:0" onchange="if(this.files && this.files[0]) { scanReceipt(this.files[0], 'qt_'); this.value = ''; }">
       <div id="scanStatus"></div>`}
       <div class="type-toggle-group">
         <input type="hidden" id="qt_type" value="${ed ? ed.type : 'expense'}">
@@ -764,15 +771,15 @@ function accountHtml() {
   return `
     <!-- Foto Profil Pengguna -->
     <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line)">
-      <div style="position:relative;width:86px;height:86px;cursor:pointer" onclick="document.getElementById('avatarFileInput').click()" title="Ketuk untuk ganti foto profil">
+      <label for="avatarFileInput" style="position:relative;width:86px;height:86px;cursor:pointer;display:block" title="Ketuk untuk ganti foto profil">
         ${avatarImgHtml(u, 86)}
         <div style="position:absolute;bottom:0;right:0;width:28px;height:28px;border-radius:50%;background:var(--main);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:var(--shadow-sm);border:2px solid var(--card)">📷</div>
-      </div>
-      <input id="avatarFileInput" type="file" accept="image/*" style="display:none" onchange="uploadProfilePhoto(this.files[0])">
+      </label>
+      <input id="avatarFileInput" type="file" accept="image/*" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;opacity:0" onchange="if(this.files && this.files[0]) { uploadProfilePhoto(this.files[0]); this.value = ''; }">
       <div id="pf_avatar_status" style="font-size:12px;margin-top:4px"></div>
       
       <div style="display:flex;gap:8px;margin-top:8px">
-        <button class="outline" style="font-size:12px;padding:6px 14px" onclick="document.getElementById('avatarFileInput').click()">Unggah Foto</button>
+        <label for="avatarFileInput" class="outline button-like" style="font-size:12px;padding:6px 14px;cursor:pointer;display:inline-block">Unggah Foto</label>
         ${u && u.user_metadata && u.user_metadata.avatar_url ? `<button class="ghost danger" style="font-size:12px;padding:6px 10px" onclick="removeAvatar()">Hapus</button>` : ''}
       </div>
 
@@ -1218,10 +1225,10 @@ function home() {
         <button class="outline" onclick="printMonthlyReport(v('x_m'))" style="flex:1">📄 Cetak Laporan PDF</button>
       </div>
       <div class="row" style="margin-top:6px">
-        <button class="scanBtn" onclick="document.getElementById('impFile').click()" style="flex:1">📂 Impor File CSV</button>
+        <label for="impFile" class="scanBtn" style="flex:1;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center">📂 Impor File CSV</label>
         <button class="outline" onclick="downloadSampleCsv()" style="font-size:12px;padding:12px">📥 Template</button>
       </div>
-      <input id="impFile" type="file" accept=".csv,text/csv" style="display:none" onchange="importCsv(this.files[0])">
+      <input id="impFile" type="file" accept=".csv,text/csv" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;opacity:0" onchange="if(this.files && this.files[0]) { importCsv(this.files[0]); this.value = ''; }">
       <div id="impStatus"></div>
     </div>
   </div>`;
@@ -1631,121 +1638,114 @@ async function importCsv(file) {
 
 // ====== EXCEL EXPORT ======
 // ====== CETAK / SIMPAN LAPORAN PDF BULANAN ======
-function printMonthlyReport(m) {
-  m = m || S.month;
-  const cur = S.tx.filter(t => t.date.startsWith(m));
+function closePrintModal() {
+  const modal = document.getElementById('duitkuPrintModal');
+  if (modal) modal.remove();
+}
+
+function printMonthlyReport(m?: string) {
+  m = m || v('x_m') || S.month;
+  const cur = S.tx.filter(t => t.date.startsWith(m!));
   const inc = sum(cur, 'income'), exp = sum(cur, 'expense'), net = inc - exp;
   const label = new Date(m + '-02').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-  
-  const reportHtml = `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Laporan Keuangan Duitku - ${label}</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 36px; color: #0f172a; max-width: 820px; margin: 0 auto; line-height: 1.4; }
-    h1 { margin: 0 0 4px; font-size: 22px; color: #1e3a8a; }
-    .meta { color: #64748b; font-size: 12.5px; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-    .box { padding: 14px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; }
-    .box .lbl { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 4px; }
-    .box .val { font-size: 18px; font-weight: 700; }
-    .val.in { color: #059669; } .val.out { color: #dc2626; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12.5px; }
-    th { text-align: left; padding: 8px; border-bottom: 2px solid #cbd5e1; background: #f1f5f9; font-size: 11px; text-transform: uppercase; color: #475569; }
-    td { padding: 8px; border-bottom: 1px solid #e2e8f0; }
-    tr:nth-child(even) { background: #fafafa; }
-    .text-right { text-align: right; }
-    @media print {
-      body { padding: 0; }
-      .no-print { display: none !important; }
-    }
-  </style>
-</head>
-<body>
-  <div style="display:flex;justify-content:space-between;align-items:flex-start">
-    <div>
-      <h1>Laporan Keuangan Duitku</h1>
-      <div class="meta">Periode: <b>${label}</b> · Dicetak pada: ${new Date().toLocaleDateString('id-ID', { dateStyle: 'long', timeStyle: 'short' })}</div>
+  const printDate = new Date().toLocaleDateString('id-ID', { dateStyle: 'long', timeStyle: 'short' });
+
+  // Hapus modal lama jika sudah ada
+  closePrintModal();
+
+  const modal = document.createElement('div');
+  modal.id = 'duitkuPrintModal';
+  modal.innerHTML = `
+    <div class="print-modal-backdrop no-print" onclick="closePrintModal()"></div>
+    <div class="print-modal-container">
+      <div class="print-actions-bar no-print">
+        <div style="font-weight:700;font-size:14px;color:var(--ink)">📄 Laporan Keuangan (${label})</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="outline" onclick="openReportInNewTab()" style="padding:6px 12px;font-size:12px">↗️ Buka Tab Baru</button>
+          <button style="padding:6px 14px;font-size:12px;font-weight:600" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
+          <button class="ghost" onclick="closePrintModal()" style="padding:6px 10px;font-size:16px;line-height:1">✕</button>
+        </div>
+      </div>
+
+      <div class="printable-sheet">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #e2e8f0;padding-bottom:12px;margin-bottom:18px">
+          <div>
+            <h1 style="margin:0 0 4px;font-size:22px;color:#1e3a8a;font-weight:800">Laporan Keuangan Duitku</h1>
+            <div style="color:#64748b;font-size:12.5px">Periode: <b>${label}</b> · Dicetak pada: ${printDate}</div>
+          </div>
+          <div style="text-align:right">
+            <span style="display:inline-block;padding:4px 10px;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700;border-radius:6px">DUITKU REPORT</span>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:12px;margin-bottom:20px">
+          <div style="padding:12px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc">
+            <div style="font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:4px">Total Pemasukan</div>
+            <div style="font-size:17px;font-weight:700;color:#059669">${rp(inc)}</div>
+          </div>
+          <div style="padding:12px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc">
+            <div style="font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:4px">Total Pengeluaran</div>
+            <div style="font-size:17px;font-weight:700;color:#dc2626">${rp(exp)}</div>
+          </div>
+          <div style="padding:12px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc">
+            <div style="font-size:11px;text-transform:uppercase;color:#64748b;font-weight:700;margin-bottom:4px">Arus Kas Bersih (Net)</div>
+            <div style="font-size:17px;font-weight:700;color:${net >= 0 ? '#059669' : '#dc2626'}">${rp(net)}</div>
+          </div>
+        </div>
+
+        <h4 style="margin:16px 0 6px;font-size:13px;color:#1e293b">Rincian Saldo Rekening Saat Ini</h4>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:18px;font-size:12px">
+          <thead><tr style="background:#f1f5f9;color:#475569"><th style="text-align:left;padding:7px 10px;border-bottom:1px solid #cbd5e1">Nama Rekening</th><th style="text-align:right;padding:7px 10px;border-bottom:1px solid #cbd5e1">Saldo</th></tr></thead>
+          <tbody>
+            ${S.acc.map(a => `<tr style="border-bottom:1px solid #e2e8f0"><td style="padding:7px 10px">${esc(a.name)}</td><td style="text-align:right;padding:7px 10px"><b>${rp(accBal(a))}</b></td></tr>`).join('')}
+          </tbody>
+        </table>
+
+        <h4 style="margin:20px 0 6px;font-size:13px;color:#1e293b">Daftar Transaksi Periode Ini (${cur.length} Transaksi)</h4>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:#f1f5f9;color:#475569"><th style="text-align:left;padding:7px 10px;border-bottom:1px solid #cbd5e1">Tanggal</th><th style="text-align:left;padding:7px 10px;border-bottom:1px solid #cbd5e1">Rekening</th><th style="text-align:left;padding:7px 10px;border-bottom:1px solid #cbd5e1">Kategori & Catatan</th><th style="text-align:right;padding:7px 10px;border-bottom:1px solid #cbd5e1">Nominal</th></tr></thead>
+          <tbody>
+            ${cur.length ? cur.map(t => `
+              <tr style="border-bottom:1px solid #e2e8f0">
+                <td style="padding:7px 10px;white-space:nowrap">${t.date}</td>
+                <td style="padding:7px 10px">${esc(accName(t.account_id))}</td>
+                <td style="padding:7px 10px"><b>${esc(t.category || '-')}</b>${t.note ? ' <span style="color:#64748b">(' + esc(t.note) + ')</span>' : ''}</td>
+                <td style="text-align:right;padding:7px 10px;color:${t.type === 'income' ? '#059669' : '#dc2626'};font-weight:600;white-space:nowrap">
+                  ${t.type === 'income' ? '+ ' : '- '}${rp(t.amount)}
+                </td>
+              </tr>
+            `).join('') : '<tr><td colspan="4" style="text-align:center;padding:16px;color:#64748b">Tidak ada transaksi pada bulan ini.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
     </div>
-    <button class="no-print" onclick="window.print()" style="padding:8px 16px;border-radius:6px;background:#2563eb;color:#fff;border:0;cursor:pointer;font-weight:600">🖨️ Cetak / Simpan PDF</button>
-  </div>
+  `;
 
-  <div class="grid">
-    <div class="box"><div class="lbl">Total Pemasukan</div><div class="val in">${rp(inc)}</div></div>
-    <div class="box"><div class="lbl">Total Pengeluaran</div><div class="val out">${rp(exp)}</div></div>
-    <div class="box"><div class="lbl">Arus Kas Bersih (Net)</div><div class="val" style="color:${net >= 0 ? '#059669' : '#dc2626'}">${rp(net)}</div></div>
-  </div>
+  document.body.appendChild(modal);
 
-  <h4 style="margin:20px 0 6px">Rincian Saldo Rekening Saat Ini</h4>
-  <table>
-    <thead><tr><th>Nama Rekening</th><th class="text-right">Saldo</th></tr></thead>
-    <tbody>
-      ${S.acc.map(a => `<tr><td>${esc(a.name)}</td><td class="text-right"><b>${rp(accBal(a))}</b></td></tr>`).join('')}
-    </tbody>
-  </table>
-
-  <h4 style="margin:24px 0 6px">Daftar Transaksi Periode Ini (${cur.length} Transaksi)</h4>
-  <table>
-    <thead><tr><th>Tanggal</th><th>Rekening</th><th>Kategori & Catatan</th><th class="text-right">Nominal</th></tr></thead>
-    <tbody>
-      ${cur.length ? cur.map(t => `
-        <tr>
-          <td>${t.date}</td>
-          <td>${esc(accName(t.account_id))}</td>
-          <td><b>${esc(t.category || '-')}</b>${t.note ? ' <span style="color:#64748b">(' + esc(t.note) + ')</span>' : ''}</td>
-          <td class="text-right" style="color:${t.type === 'income' ? '#059669' : '#dc2626'};font-weight:600">
-            ${t.type === 'income' ? '+ ' : '- '}${rp(t.amount)}
-          </td>
-        </tr>
-      `).join('') : '<tr><td colspan="4" style="text-align:center;color:#64748b">Tidak ada transaksi pada bulan ini.</td></tr>'}
-    </tbody>
-  </table>
-  <script>
-    window.onload = function() {
-      setTimeout(function() { window.print(); }, 250);
-    };
-  <\/script>
-</body>
-</html>`;
-
-  try {
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.open();
-      printWindow.document.write(reportHtml);
-      printWindow.document.close();
-      return;
+  (window as any).openReportInNewTab = () => {
+    const fullHtml = `<!doctype html><html><head><meta charset="utf-8"><title>Laporan Keuangan Duitku - ${label}</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:32px;color:#0f172a;max-width:820px;margin:0 auto;line-height:1.4}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 10px;border-bottom:1px solid #e2e8f0}@media print{.no-print{display:none!important}}</style></head><body><div class="no-print" style="margin-bottom:16px"><button onclick="window.print()" style="padding:8px 16px;border-radius:6px;background:#2563eb;color:#fff;border:0;cursor:pointer;font-weight:600">🖨️ Cetak / Simpan PDF</button></div>` + modal.querySelector('.printable-sheet')!.innerHTML + `</body></html>`;
+    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank');
+    if (!win) {
+      toast('Pop-up terblokir. Anda dapat langsung mencetak dari dialog saat ini.', 'info');
     }
-  } catch(e) {}
+  };
 
-  // Fallback: Invisible iframe printing if pop-up blocked or mobile browser
-  const frame = document.createElement('iframe');
-  frame.style.position = 'fixed';
-  frame.style.right = '0';
-  frame.style.bottom = '0';
-  frame.style.width = '0';
-  frame.style.height = '0';
-  frame.style.border = '0';
-  document.body.appendChild(frame);
-  const doc = frame.contentWindow ? frame.contentWindow.document : frame.contentDocument;
-  if (doc) {
-    doc.open();
-    doc.write(reportHtml);
-    doc.close();
-    setTimeout(() => {
-      try {
-        if (frame.contentWindow) {
-          frame.contentWindow.focus();
-          frame.contentWindow.print();
-        }
-      } catch(e) {}
-      setTimeout(() => frame.remove(), 2500);
-    }, 400);
-  } else {
-    toast('Gagal membuka dialog cetak. Izinkan pop-up di browser.', 'warn');
-  }
+  // Otomatis picu dialog cetak native
+  setTimeout(() => {
+    try {
+      window.print();
+    } catch(err) {
+      console.warn('Auto print warning:', err);
+    }
+  }, 250);
+}
+
+if (typeof window !== 'undefined') {
+  (window as any).printMonthlyReport = printMonthlyReport;
+  (window as any).closePrintModal = closePrintModal;
 }
 
 async function exportXlsx() {
@@ -1901,14 +1901,17 @@ async function preprocessReceiptImage(file) {
 }
 
 // ====== DUAL ENGINE OCR SCANNER (AI GEMINI VISION + HIGH-ACCURACY LOCAL) ======
-async function scanReceipt(file, p) {
-  p = p || 't_';
+async function scanReceipt(file: any, p?: string) {
+  p = p || 'qt_';
   if (!file) return;
-  const box = $('scanStatus');
+  const setBox = (html: string) => {
+    const box = $('scanStatus');
+    if (box) box.innerHTML = html;
+  };
 
   // ENGINE 1: GOOGLE GEMINI AI VISION (JIKA API KEY TERSEDIA)
   if (GEMINI_API_KEY) {
-    box.innerHTML = '<div class="mute" style="margin:8px 0">✨ Mengirim gambar ke Google Gemini AI Vision...</div>';
+    setBox('<div class="mute" style="margin:8px 0">✨ Mengirim gambar ke Google Gemini AI Vision...</div>');
     try {
       const base64Data = await fileToBase64(file);
       const mimeType = file.type || 'image/jpeg';
@@ -1957,51 +1960,60 @@ Hanya kembalikan JSON murni tanpa markdown triple backticks.`;
       const catVal = (parsed.category || '').trim();
 
       if (totalVal > 0) {
-        const amtEl = $(p + 'amt');
-        amtEl.value = String(totalVal);
-        amtEl.dispatchEvent(new Event('input'));
+        const amtEl = $(p + 'amt') as HTMLInputElement | null;
+        if (amtEl) {
+          amtEl.value = String(totalVal);
+          amtEl.dispatchEvent(new Event('input'));
+        }
       }
-      if (merchantVal) $(p + 'note').value = merchantVal.slice(0, 50);
-      if (dateVal && /^\d{4}-\d{2}-\d{2}$/.test(dateVal)) $(p + 'date').value = dateVal;
-      if (catVal) $(p + 'cat').value = catVal;
+      const noteEl = $(p + 'note') as HTMLInputElement | null;
+      if (noteEl && merchantVal) noteEl.value = merchantVal.slice(0, 50);
+      const dateEl = $(p + 'date') as HTMLInputElement | null;
+      if (dateEl && dateVal && /^\d{4}-\d{2}-\d{2}$/.test(dateVal)) dateEl.value = dateVal;
+      const catEl = $(p + 'cat') as HTMLInputElement | null;
+      if (catEl && catVal) catEl.value = catVal;
 
-      box.innerHTML = `<div class="mute" style="margin:6px 0;color:var(--in)">
+      setBox(`<div class="mute" style="margin:6px 0;color:var(--in)">
         ✨ <b>Dianalisis Sempurna oleh Gemini AI!</b><br>
         Total: <b>${rp(totalVal)}</b> ${catVal ? `· Kategori: <b>${catVal}</b>` : ''} ${merchantVal ? `· Toko: <b>${esc(merchantVal)}</b>` : ''}
-      </div>`;
+      </div>`);
       return;
-    } catch(aiErr) {
+    } catch(aiErr: any) {
       console.warn('Gemini AI Vision gagal, beralih ke local OCR:', aiErr);
-      box.innerHTML = `<div class="mute" style="margin:6px 0;color:var(--warn)">⚠️ AI API gagal (${aiErr.message}), beralih ke scanner lokal...</div>`;
+      setBox(`<div class="mute" style="margin:6px 0;color:var(--warn)">⚠️ AI API gagal (${aiErr?.message || 'Error'}), beralih ke scanner lokal...</div>`);
     }
   }
 
   // ENGINE 2: LOCAL HIGH-ACCURACY OCR DENGAN PERBAIKAN DESIMAL (ANTI-SALAH 20.000,00 JADI 2 JUTA)
-  box.innerHTML = '<div class="mute" style="margin:8px 0">⏳ Mempersiapkan scanner struk lokal...</div>';
+  setBox('<div class="mute" style="margin:8px 0">⏳ Mempersiapkan scanner struk lokal...</div>');
   try { 
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js', 'Tesseract'); 
   } catch (e) { 
-    box.innerHTML = '<div class="mute" style="margin:8px 0;color:var(--out)">⚠️ Gagal memuat library scanner OCR. Periksa koneksi internet Anda.</div>'; 
+    setBox('<div class="mute" style="margin:8px 0;color:var(--out)">⚠️ Gagal memuat library scanner OCR. Periksa koneksi internet Anda.</div>'); 
     return; 
   }
 
   try {
+    const tess = (window as any).Tesseract;
+    if (!tess || typeof tess.recognize !== 'function') {
+      throw new Error('Library Tesseract belum siap.');
+    }
     const processedImg = await preprocessReceiptImage(file);
-    const { data } = await Tesseract.recognize(processedImg, 'ind+eng', {
-      logger: m => {
+    const { data } = await tess.recognize(processedImg, 'ind+eng', {
+      logger: (m: any) => {
         if (m.status === 'recognizing text' && m.progress !== undefined) {
-          box.innerHTML = `<div class="mute" style="margin:8px 0">🔍 Memindai teks struk... <b>${Math.round(m.progress * 100)}%</b></div>`;
+          setBox(`<div class="mute" style="margin:8px 0">🔍 Memindai teks struk... <b>${Math.round(m.progress * 100)}%</b></div>`);
         }
       }
     });
 
     const rawText = data.text || '';
-    const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+    const lines = rawText.split('\n').map((l: string) => l.trim()).filter(Boolean);
 
     // Helper ekstrak nominal dengan fungsi parseReceiptAmount anti-salah desimal
-    const extractNums = (str) => {
+    const extractNums = (str: string) => {
       const matches = str.match(/(\d[\d.,]{2,})/g) || [];
-      const res = [];
+      const res: number[] = [];
       for (const m of matches) {
         const val = parseReceiptAmount(m);
         if (val >= 100 && val <= 100000000) {
@@ -2055,7 +2067,7 @@ Hanya kembalikan JSON murni tanpa markdown triple backticks.`;
 
     // Prioritas 4: Fallback
     if (!bestTotal) {
-      const candidates = [];
+      const candidates: number[] = [];
       for (const l of lines) {
         const low = l.toLowerCase();
         if (!/(kembali|change|kembalian|tunai|cash|debit|kartu|card|saldo|telp|pajak|ppn)/i.test(low)) {
@@ -2107,15 +2119,20 @@ Hanya kembalikan JSON murni tanpa markdown triple backticks.`;
     }
 
     if (bestTotal) {
-      const amtEl = $(p + 'amt');
-      amtEl.value = String(Math.round(bestTotal));
-      amtEl.dispatchEvent(new Event('input'));
+      const amtEl = $(p + 'amt') as HTMLInputElement | null;
+      if (amtEl) {
+        amtEl.value = String(Math.round(bestTotal));
+        amtEl.dispatchEvent(new Event('input'));
+      }
     }
-    if (merchant) $(p + 'note').value = merchant.slice(0, 50);
-    if (dateVal) $(p + 'date').value = dateVal;
-    if (detectedCat) $(p + 'cat').value = detectedCat;
+    const noteEl = $(p + 'note') as HTMLInputElement | null;
+    if (noteEl && merchant) noteEl.value = merchant.slice(0, 50);
+    const dateEl = $(p + 'date') as HTMLInputElement | null;
+    if (dateEl && dateVal) dateEl.value = dateVal;
+    const catEl = $(p + 'cat') as HTMLInputElement | null;
+    if (catEl && detectedCat) catEl.value = detectedCat;
 
-    box.innerHTML = (bestTotal ? 
+    setBox((bestTotal ? 
       `<div class="mute" style="margin:6px 0;color:var(--in)">
         ✓ <b>Terdeteksi (OCR Lokal)!</b><br>
         Nominal: <b>${rp(bestTotal)}</b> ${detectedCat ? `· Kategori: <b>${detectedCat}</b>` : ''} ${merchant ? `· Toko: <b>${esc(merchant)}</b>` : ''}
@@ -2127,12 +2144,16 @@ Hanya kembalikan JSON murni tanpa markdown triple backticks.`;
     ) + `<details style="margin-top:6px">
       <summary class="mute" style="cursor:pointer;font-size:11.5px">Lihat hasil teks OCR mentah</summary>
       <div style="max-height:100px;overflow-y:auto;background:var(--card-subtle);padding:8px;border-radius:8px;font-size:11px;white-space:pre-wrap;margin-top:4px">${esc(rawText || '(Teks kosong)')}</div>
-    </details>`;
+    </details>`);
 
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
-    box.innerHTML = '<div class="mute" style="margin:6px 0;color:var(--out)">⚠️ Gagal memindai struk. Silakan isi form secara manual.</div>';
+    setBox('<div class="mute" style="margin:6px 0;color:var(--out)">⚠️ Gagal memindai struk. Silakan isi form secara manual.</div>');
   }
+}
+
+if (typeof window !== 'undefined') {
+  (window as any).scanReceipt = scanReceipt;
 }
 
 async function addSav(p) {
@@ -2306,6 +2327,8 @@ declare global {
     promptGeminiKey: () => void;
     saveGeminiKey: (key: string) => void;
     scanReceipt: (file: File, p?: string) => void;
+    printMonthlyReport: (m?: string) => void;
+    closePrintModal: () => void;
   }
 }
 
@@ -2367,6 +2390,7 @@ if (typeof window !== 'undefined') {
   (window as any).saveGeminiKey = saveGeminiKey;
   (window as any).scanReceipt = scanReceipt;
   (window as any).printMonthlyReport = printMonthlyReport;
+  (window as any).closePrintModal = closePrintModal;
   (window as any).exportXlsx = exportXlsx;
   (window as any).importCsv = importCsv;
   (window as any).downloadSampleCsv = downloadSampleCsv;
