@@ -1637,12 +1637,7 @@ function printMonthlyReport(m) {
   const inc = sum(cur, 'income'), exp = sum(cur, 'expense'), net = inc - exp;
   const label = new Date(m + '-02').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
   
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) {
-    toast('Pop-up terblokir. Izinkan pop-up di browser untuk mencetak PDF.', 'warn');
-    return;
-  }
-  printWindow.document.write(`<!doctype html>
+  const reportHtml = `<!doctype html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -1707,9 +1702,50 @@ function printMonthlyReport(m) {
       `).join('') : '<tr><td colspan="4" style="text-align:center;color:#64748b">Tidak ada transaksi pada bulan ini.</td></tr>'}
     </tbody>
   </table>
+  <script>
+    window.onload = function() {
+      setTimeout(function() { window.print(); }, 250);
+    };
+  <\/script>
 </body>
-</html>`);
-  printWindow.document.close();
+</html>`;
+
+  try {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.open();
+      printWindow.document.write(reportHtml);
+      printWindow.document.close();
+      return;
+    }
+  } catch(e) {}
+
+  // Fallback: Invisible iframe printing if pop-up blocked or mobile browser
+  const frame = document.createElement('iframe');
+  frame.style.position = 'fixed';
+  frame.style.right = '0';
+  frame.style.bottom = '0';
+  frame.style.width = '0';
+  frame.style.height = '0';
+  frame.style.border = '0';
+  document.body.appendChild(frame);
+  const doc = frame.contentWindow ? frame.contentWindow.document : frame.contentDocument;
+  if (doc) {
+    doc.open();
+    doc.write(reportHtml);
+    doc.close();
+    setTimeout(() => {
+      try {
+        if (frame.contentWindow) {
+          frame.contentWindow.focus();
+          frame.contentWindow.print();
+        }
+      } catch(e) {}
+      setTimeout(() => frame.remove(), 2500);
+    }, 400);
+  } else {
+    toast('Gagal membuka dialog cetak. Izinkan pop-up di browser.', 'warn');
+  }
 }
 
 async function exportXlsx() {
@@ -2276,10 +2312,23 @@ declare global {
 if (typeof window !== 'undefined') {
   (window as any).S = S;
   (window as any).sb = sb;
+  (window as any).v = v;
+  (window as any).$ = $;
+  (window as any).rp = rp;
+  (window as any).esc = esc;
+  (window as any).inIDR = inIDR;
+  (window as any).toCurVal = toCurVal;
+  (window as any).today = today;
+  (window as any).ym = ym;
+  (window as any).accBal = accBal;
+  (window as any).accName = accName;
+  (window as any).savBal = savBal;
+  (window as any).savTotal = savTotal;
   (window as any).render = render;
   (window as any).toggleAddSheet = toggleAddSheet;
   (window as any).goAdd = goAdd;
   (window as any).openTransfer = openTransfer;
+  (window as any).addTransfer = addTransfer;
   (window as any).togglePrivacy = () => { togglePrivacy(); render(); };
   (window as any).toggleThemeSheet = toggleThemeSheet;
   (window as any).changeMonth = changeMonth;
@@ -2301,6 +2350,7 @@ if (typeof window !== 'undefined') {
   (window as any).pay = pay;
   (window as any).openSavModal = openSavModal;
   (window as any).submitSavMove = submitSavMove;
+  (window as any).execSavMove = execSavMove;
   (window as any).filterByAcc = filterByAcc;
   (window as any).uploadProfilePhoto = uploadProfilePhoto;
   (window as any).setPresetAvatar = setPresetAvatar;
@@ -2316,4 +2366,14 @@ if (typeof window !== 'undefined') {
   (window as any).promptGeminiKey = promptGeminiKey;
   (window as any).saveGeminiKey = saveGeminiKey;
   (window as any).scanReceipt = scanReceipt;
+  (window as any).printMonthlyReport = printMonthlyReport;
+  (window as any).exportXlsx = exportXlsx;
+  (window as any).importCsv = importCsv;
+  (window as any).downloadSampleCsv = downloadSampleCsv;
+  (window as any).setInstFilter = setInstFilter;
+  (window as any).setSettingsTab = setSettingsTab;
+  (window as any).setCur = setCur;
+  (window as any).dismissOnboard = dismissOnboard;
+  (window as any).duplicateTx = duplicateTx;
+  (window as any).formatInputCurrency = formatInputCurrency;
 }
