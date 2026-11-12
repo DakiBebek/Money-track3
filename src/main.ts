@@ -4,7 +4,8 @@
 // ==============================================================================
 
 import './styles/main.css';
-import { sb, SUPABASE_URL } from './lib/supabase';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { AppState, TxFilter, EditingState, UserSession } from './types/state';
 import type { 
   AccountRow, 
   TransactionRow, 
@@ -12,37 +13,8 @@ import type {
   SavingsRow, 
   SavingMoveRow, 
   BudgetRow, 
-  RecurringRow, 
-  ProfileRow 
+  RecurringRow 
 } from './types/database';
-import type { 
-  AppState, 
-  TxFilter, 
-  EditingState, 
-  UserSession, 
-  ThemeConfig 
-} from './types/state';
-import { 
-  rp, 
-  today, 
-  ym, 
-  shiftMonth, 
-  esc, 
-  toCurVal, 
-  togglePrivacy, 
-  CURRENT_CURRENCY, 
-  setCurrency,
-  HIDE_NUMS
-} from './utils/format';
-import { attachCurrencyCalculator, evalMathExpr } from './utils/calculator';
-import { compressImageToAvatar } from './utils/image';
-import { scanReceiptWithGemini, GEMINI_API_KEY, setGeminiApiKey } from './utils/ocr';
-import { saveToLocalCache, loadFromLocalCache, CACHE_KEY } from './lib/storage';
-import { initSplashScreen, safeDismissSplash } from './components/splash';
-
-// Initialize Splash Screen safe timer
-initSplashScreen();
-
 
 // ====== DATA SUPABASE ======
 const SUPABASE_URL = 'https://pdwehqekftzjcbtgupdn.supabase.co';
@@ -98,22 +70,27 @@ function saveToLocalCache() {
   }
 }
 
-let sb;
+let sb: any;
 function initSupabase() {
-  if (typeof supabase !== 'undefined') {
-    try {
-      sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      sb.auth.onAuthStateChange((event, session) => {
-        if (event === 'PASSWORD_RECOVERY') { CURRENT_USER = session.user; showRecovery = true; authView(); }
+  try {
+    if (typeof createClient === 'function') {
+      sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else if (typeof (window as any).supabase !== 'undefined') {
+      sb = (window as any).supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+    if (sb) {
+      sb.auth.onAuthStateChange((event: string, session: any) => {
+        if (event === 'PASSWORD_RECOVERY') { CURRENT_USER = session?.user; showRecovery = true; authView(); }
       });
       boot();
-    } catch(err) {
-      console.error(err);
-      authView();
+      return;
     }
-  } else {
-    setTimeout(initSupabase, 80);
+  } catch(err) {
+    console.error('Supabase init error:', err);
+    authView();
+    return;
   }
+  setTimeout(initSupabase, 80);
 }
 
 
@@ -2302,12 +2279,11 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 
-
-// Bind essential actions to window for direct HTML event handlers
+// Global window declarations for direct inline HTML events
 declare global {
   interface Window {
-    S: AppState;
-    sb: typeof sb;
+    S: any;
+    sb: any;
     CURRENT_USER: any;
     render: () => void;
     toggleAddSheet: (v: boolean) => void;
