@@ -2274,6 +2274,37 @@ async function del(table, id) {
   if (await run(sb.from(table).delete().eq('id', id))) { toast('Data telah dihapus', 'success'); load(); }
 }
 
+// ====== GLOBAL WINDOW BINDINGS (UNTUK INTERAKSI HTML INLINE) ======
+function bindWindowGlobals() {
+  if (typeof window === 'undefined') return;
+  const globals: Record<string, any> = {
+    S, sb, v, $, rp, esc, inIDR, toCurVal, today, ym,
+    accBal, accName, savBal, savTotal, render, toggleAddSheet,
+    goAdd, openTransfer, addTransfer,
+    togglePrivacy: () => { togglePrivacy(); render(); },
+    toggleThemeSheet, changeMonth, pickMonth, pickTheme, selectTxType,
+    pickCat, handleSearch, setTxFilter, clearTxFilter, editRow, del,
+    addTx, addAcc, addInst, addSav, addBudget, addRecurring, pay,
+    openSavModal, execSavMove, submitSavMove: execSavMove, filterByAcc,
+    uploadProfilePhoto, setPresetAvatar, removeAvatar, saveUsername, changePassword,
+    logout, login, signup, sendReset, finishRecovery, toggleForgot,
+    promptGeminiKey, saveGeminiKey, scanReceipt, printMonthlyReport, closePrintModal,
+    exportXlsx, importCsv, downloadSampleCsv, setInstFilter, setSettingsTab, setCur,
+    dismissOnboard, duplicateTx, formatInputCurrency
+  };
+
+  for (const [key, val] of Object.entries(globals)) {
+    try {
+      (window as any)[key] = val;
+    } catch(err) {
+      console.warn(`Gagal bind window.${key}:`, err);
+    }
+  }
+}
+
+// Bind SEMUA fungsi ke window SEBELUM Supabase atau render dijalankan
+bindWindowGlobals();
+
 fetchRates();
 initSupabase();
 
@@ -2281,7 +2312,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
 
-// Global window declarations for direct inline HTML events
+// Global window declarations for TypeScript check
 declare global {
   interface Window {
     S: any;
@@ -2312,6 +2343,7 @@ declare global {
     pay: (id: string) => void;
     openSavModal: (id: string, action: string) => void;
     submitSavMove: (id: string, action: string) => void;
+    execSavMove: (id: string, action: string) => void;
     filterByAcc: (id: string) => void;
     uploadProfilePhoto: (file: File) => void;
     setPresetAvatar: (av: string) => void;
@@ -2329,75 +2361,14 @@ declare global {
     scanReceipt: (file: File, p?: string) => void;
     printMonthlyReport: (m?: string) => void;
     closePrintModal: () => void;
+    exportXlsx: () => void;
+    importCsv: (file: File) => void;
+    downloadSampleCsv: () => void;
+    setInstFilter: (filter: string) => void;
+    setSettingsTab: (tab: string) => void;
+    setCur: (cur: string) => void;
+    dismissOnboard: () => void;
+    duplicateTx: (id: string) => void;
+    formatInputCurrency: (el: HTMLInputElement) => void;
   }
-}
-
-if (typeof window !== 'undefined') {
-  (window as any).S = S;
-  (window as any).sb = sb;
-  (window as any).v = v;
-  (window as any).$ = $;
-  (window as any).rp = rp;
-  (window as any).esc = esc;
-  (window as any).inIDR = inIDR;
-  (window as any).toCurVal = toCurVal;
-  (window as any).today = today;
-  (window as any).ym = ym;
-  (window as any).accBal = accBal;
-  (window as any).accName = accName;
-  (window as any).savBal = savBal;
-  (window as any).savTotal = savTotal;
-  (window as any).render = render;
-  (window as any).toggleAddSheet = toggleAddSheet;
-  (window as any).goAdd = goAdd;
-  (window as any).openTransfer = openTransfer;
-  (window as any).addTransfer = addTransfer;
-  (window as any).togglePrivacy = () => { togglePrivacy(); render(); };
-  (window as any).toggleThemeSheet = toggleThemeSheet;
-  (window as any).changeMonth = changeMonth;
-  (window as any).pickMonth = pickMonth;
-  (window as any).pickTheme = pickTheme;
-  (window as any).selectTxType = selectTxType;
-  (window as any).pickCat = pickCat;
-  (window as any).handleSearch = handleSearch;
-  (window as any).setTxFilter = setTxFilter;
-  (window as any).clearTxFilter = clearTxFilter;
-  (window as any).editRow = editRow;
-  (window as any).del = del;
-  (window as any).addTx = addTx;
-  (window as any).addAcc = addAcc;
-  (window as any).addInst = addInst;
-  (window as any).addSav = addSav;
-  (window as any).addBudget = addBudget;
-  (window as any).addRecurring = addRecurring;
-  (window as any).pay = pay;
-  (window as any).openSavModal = openSavModal;
-  (window as any).submitSavMove = submitSavMove;
-  (window as any).execSavMove = execSavMove;
-  (window as any).filterByAcc = filterByAcc;
-  (window as any).uploadProfilePhoto = uploadProfilePhoto;
-  (window as any).setPresetAvatar = setPresetAvatar;
-  (window as any).removeAvatar = removeAvatar;
-  (window as any).saveUsername = saveUsername;
-  (window as any).changePassword = changePassword;
-  (window as any).logout = logout;
-  (window as any).login = login;
-  (window as any).signup = signup;
-  (window as any).sendReset = sendReset;
-  (window as any).finishRecovery = finishRecovery;
-  (window as any).toggleForgot = toggleForgot;
-  (window as any).promptGeminiKey = promptGeminiKey;
-  (window as any).saveGeminiKey = saveGeminiKey;
-  (window as any).scanReceipt = scanReceipt;
-  (window as any).printMonthlyReport = printMonthlyReport;
-  (window as any).closePrintModal = closePrintModal;
-  (window as any).exportXlsx = exportXlsx;
-  (window as any).importCsv = importCsv;
-  (window as any).downloadSampleCsv = downloadSampleCsv;
-  (window as any).setInstFilter = setInstFilter;
-  (window as any).setSettingsTab = setSettingsTab;
-  (window as any).setCur = setCur;
-  (window as any).dismissOnboard = dismissOnboard;
-  (window as any).duplicateTx = duplicateTx;
-  (window as any).formatInputCurrency = formatInputCurrency;
 }
