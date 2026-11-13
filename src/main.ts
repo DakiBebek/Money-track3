@@ -590,10 +590,17 @@ function addSheetHtml() {
   </div>`;
 }
 
-function toggleThemeSheet(v) { showThemeSheet = v; render(); }
-function changeMonth(n) { S.month = shiftMonth(S.month, n); render(); }
-function pickMonth(el) { S.month = el.value; render(); }
-function pickTheme(name) { applyTheme(name); render(); toast('Tema berhasil diubah', 'success'); }
+function toggleThemeSheet(v: boolean) { 
+  showThemeSheet = v; 
+  if (!CURRENT_USER) authView(); else render(); 
+}
+function changeMonth(n: number) { S.month = shiftMonth(S.month, n); render(); }
+function pickMonth(el: HTMLInputElement) { S.month = el.value; render(); }
+function pickTheme(name: string) { 
+  applyTheme(name); 
+  if (!CURRENT_USER) authView(); else render(); 
+  toast('Tema berhasil diubah', 'success'); 
+}
 
 let settingsTab = 'tema';
 function setSettingsTab(t) { settingsTab = t; render(); }
@@ -895,7 +902,10 @@ async function runRecurring() {
 }
 
 let showForgot = false, showRecovery = false;
-function toggleForgot(v) { showForgot = v; render(); }
+function toggleForgot(v: boolean) { 
+  showForgot = v; 
+  if (!CURRENT_USER) authView(); else render(); 
+}
 
 function authView() {
   safeDismissSplash();
@@ -946,7 +956,8 @@ async function sendReset() {
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
   if (error) return alert(error.message);
   toast('Link reset sudah dikirim. Cek inbox (atau folder spam).', 'success');
-  showForgot = false; render();
+  showForgot = false; 
+  if (!CURRENT_USER) authView(); else render();
 }
 
 async function finishRecovery() {
@@ -994,6 +1005,10 @@ const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '
 
 // ====== RENDER UI UTAMA ======
 function render() {
+  if (!CURRENT_USER && !S.acc.length && !loadFromLocalCache()) {
+    authView();
+    return;
+  }
   const views = { home, trx, accs, inst, sav };
   const tabs = [
     ['home', 'Beranda', ICONS.home], 
