@@ -55,6 +55,7 @@ export interface SavingMoveRow {
   account_id: string;
   type: SavingMoveType;
   amount: number;
+  date?: string;
   created_at?: string;
 }
 
@@ -74,6 +75,7 @@ export interface RecurringRow {
   type: TransactionType;
   amount: number;
   category: string | null;
+  note?: string | null;
   day_of_month: number;
   last_run?: string | null;
   created_at?: string;

@@ -61,8 +61,9 @@ Hanya kembalikan JSON murni tanpa markdown triple backticks.`;
 
   const resData = await response.json();
   const rawAnswer = resData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  const cleanJson = rawAnswer.replace(/```json/g, '').replace(/```/g, '').trim();
-  const parsed = JSON.parse(cleanJson);
+  const cleanJson = rawAnswer.replace(/```json/gi, '').replace(/```/g, '').trim();
+  const jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
+  const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : cleanJson);
 
   return {
     total: Math.round(Number(parsed.total) || 0),

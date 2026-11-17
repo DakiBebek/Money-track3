@@ -82,8 +82,21 @@ function initSupabase() {
       sb = (window as any).supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     }
     if (sb) {
+      (window as any).sb = sb;
       sb.auth.onAuthStateChange((event: string, session: any) => {
-        if (event === 'PASSWORD_RECOVERY') { CURRENT_USER = session?.user; showRecovery = true; authView(); }
+        if (event === 'PASSWORD_RECOVERY') {
+          CURRENT_USER = session?.user;
+          (window as any).CURRENT_USER = CURRENT_USER;
+          showRecovery = true;
+          authView();
+        } else if (event === 'SIGNED_OUT') {
+          CURRENT_USER = null;
+          (window as any).CURRENT_USER = null;
+          authView();
+        } else if (session?.user) {
+          CURRENT_USER = session.user;
+          (window as any).CURRENT_USER = CURRENT_USER;
+        }
       });
       boot();
       return;
@@ -112,7 +125,7 @@ function replaySplashScreen() {
 }
 
 // ====== TOAST ======
-function toast(msg, type = 'info') {
+function toast(msg: string, type = 'info') {
   const existing = document.querySelector('.toast');
   if (existing) existing.remove();
   const t = document.createElement('div');
@@ -128,13 +141,13 @@ function toast(msg, type = 'info') {
     setTimeout(() => t.remove(), 200);
   }, 2800);
 }
-window.alert = function(msg) {
-  toast(msg, msg.toLowerCase().includes('gagal') || msg.toLowerCase().includes('belum') || msg.toLowerCase().includes('isi') ? 'error' : 'info');
+window.alert = function(msg: any) {
+  toast(String(msg), String(msg).toLowerCase().includes('gagal') || String(msg).toLowerCase().includes('belum') || String(msg).toLowerCase().includes('isi') ? 'error' : 'info');
 };
 
 // ====== DYNAMIC SCRIPT ======
-async function loadScript(url, globalVar) {
-  if (window[globalVar]) return;
+async function loadScript(url: string, globalVar: string) {
+  if ((window as any)[globalVar]) return;
   return new Promise((res, rej) => {
     const s = document.createElement('script');
     s.src = url; s.onload = res; s.onerror = rej;
@@ -149,12 +162,12 @@ if (typeof window !== 'undefined') {
   (window as any).v = v;
 }
 const CURS = ['IDR', 'USD', 'EUR', 'SGD', 'MYR', 'JPY', 'AUD', 'GBP', 'SAR', 'TWD'];
-let CUR = 'IDR', RATES = { IDR: 1 }, RATE_T = null;
+let CUR = 'IDR', RATES: Record<string, number> = { IDR: 1 }, RATE_T: number | null = null;
 
 // ====== GOOGLE GEMINI AI OCR INTEGRATION ======
 let GEMINI_API_KEY = '';
 try { GEMINI_API_KEY = localStorage.getItem('gemini_api_key') || ''; } catch(e) {}
-function saveGeminiKey(key) {
+function saveGeminiKey(key: string) {
   GEMINI_API_KEY = (key || '').trim();
   try { localStorage.setItem('gemini_api_key', GEMINI_API_KEY); } catch(e) {}
   toast(GEMINI_API_KEY ? 'API Key AI Gemini berhasil disimpan!' : 'API Key Gemini dihapus.', 'success');
@@ -178,10 +191,12 @@ function togglePrivacy() {
   render();
 }
 
-const rp = n => {
+const rp = (n: number | string | null | undefined) => {
   if (HIDE_NUMS) return '••••••';
+  const val = Number(n) || 0;
   const cur = RATES[CUR] ? CUR : 'IDR', d = ['IDR', 'JPY'].includes(cur) ? 0 : 2;
-  return new Intl.NumberFormat(cur === 'IDR' ? 'id-ID' : 'en-US', { style: 'currency', currency: cur, minimumFractionDigits: d, maximumFractionDigits: d }).format(n * RATES[cur]);
+  const rate = RATES[cur] || 1;
+  return new Intl.NumberFormat(cur === 'IDR' ? 'id-ID' : 'en-US', { style: 'currency', currency: cur, minimumFractionDigits: d, maximumFractionDigits: d }).format(val * rate);
 };
 
 async function fetchRates() {
@@ -195,14 +210,14 @@ async function fetchRates() {
   if (document.querySelector('nav')) render();
 }
 
-function parseAmt(raw) {
+function parseAmt(raw: unknown): number {
   let s = String(raw || '').trim();
   if (CUR === 'IDR' || CUR === 'JPY') s = s.replace(/\./g, ''); else s = s.replace(/,/g, '');
   const n = parseFloat(s);
   return isNaN(n) ? 0 : n;
 }
 
-function inIDR(id) {
+function inIDR(id: string): number | null {
   const x = parseAmt(v(id));
   if (!x) return 0;
   if (CUR === 'IDR') return x;
@@ -211,10 +226,11 @@ function inIDR(id) {
   return Math.round(x / r);
 }
 
-function setCur(c) { CUR = c; try { localStorage.setItem('cur', c); } catch (e) {} render(); }
-function toCurVal(idr) {
-  if (CUR === 'IDR' || !RATES[CUR]) return Math.round(idr);
-  const x = idr * RATES[CUR];
+function setCur(c: string) { CUR = c; try { localStorage.setItem('cur', c); } catch (e) {} render(); }
+function toCurVal(idr: number | string | null | undefined): number {
+  const val = Number(idr) || 0;
+  if (CUR === 'IDR' || !RATES[CUR]) return Math.round(val);
+  const x = val * RATES[CUR];
   return ['IDR', 'JPY'].includes(CUR) ? Math.round(x) : +x.toFixed(2);
 }
 
@@ -233,14 +249,14 @@ function curBar() {
 }
 
 const today = () => new Date().toLocaleDateString('en-CA');
-const ym = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-const sum = (a, t) => a.filter(x => x.type === t).reduce((s, x) => s + +x.amount, 0);
-function shiftMonth(m, n) { const [y, mo] = m.split('-').map(Number); const d = new Date(y, mo - 1 + n, 1); return ym(d); }
+const ym = (d: Date) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+const sum = (a: any[], t: string) => a.filter(x => x.type === t).reduce((s: number, x: any) => s + +x.amount, 0);
+function shiftMonth(m: string, n: number) { const [y, mo] = m.split('-').map(Number); const d = new Date(y, mo - 1 + n, 1); return ym(d); }
 
-let S = { acc: [], tx: [], inst: [], sav: [], mv: [], bud: [], rec: [], tab: 'home', month: ym(new Date()) };
+let S: AppState = { acc: [], tx: [], inst: [], sav: [], mv: [], bud: [], rec: [], tab: 'home', month: ym(new Date()) };
 
 // ====== O(1) BALANCES CACHE ======
-let BAL_CACHE = {};
+let BAL_CACHE: Record<string, number> = {};
 function computeBalances() {
   BAL_CACHE = {};
   S.acc.forEach(a => { BAL_CACHE[a.id] = +a.balance; });
@@ -258,26 +274,26 @@ function computeBalances() {
   });
 }
 
-const THEMES = {
+const THEMES: Record<string, { label: string; swatch: string; vars: Record<string, string> }> = {
   modern: { label: 'Modern (Indigo)', swatch: '#2563eb', vars: { '--bg': '#f8fafc', '--card': '#ffffff', '--card-subtle': '#f1f5f9', '--ink': '#0f172a', '--mute': '#64748b', '--line': '#e2e8f0', '--main': '#2563eb', '--main2': '#1d4ed8', '--main-light': '#eff6ff', '--in': '#059669', '--out': '#e11d48', '--hero1': '#1e3a8a', '--hero2': '#0f172a', '--hero-ink': '#fff', '--hero-mute': '#94a3b8', '--hero-chip': 'rgba(255,255,255,.12)' } },
   klasik: { label: 'Klasik (Emerald)', swatch: '#059669', vars: { '--bg': '#f4f6f4', '--card': '#ffffff', '--card-subtle': '#e9eee9', '--ink': '#14241a', '--mute': '#536b5c', '--line': '#d8e2da', '--main': '#059669', '--main2': '#047857', '--main-light': '#ecfdf5', '--in': '#059669', '--out': '#dc2626', '--hero1': '#065f46', '--hero2': '#022c22', '--hero-ink': '#fff', '--hero-mute': '#a7f3d0', '--hero-chip': 'rgba(255,255,255,.12)' } },
   gelap: { label: 'Gelap (Obsidian)', swatch: '#6366f1', vars: { '--bg': '#090d16', '--card': '#131b2e', '--card-subtle': '#1a243d', '--ink': '#f1f5f9', '--mute': '#8192a9', '--line': '#1e293b', '--main': '#6366f1', '--main2': '#4f46e5', '--main-light': 'rgba(99,102,241,.18)', '--in': '#10b981', '--out': '#f43f5e', '--hero1': '#312e81', '--hero2': '#090d16', '--hero-ink': '#fff', '--hero-mute': '#94a3b8', '--hero-chip': 'rgba(255,255,255,.08)' } },
 };
 
 let CURRENT_THEME = 'modern';
-function applyTheme(name) {
+function applyTheme(name: string) {
   const t = THEMES[name]; if (!t) return;
   CURRENT_THEME = name;
-  Object.entries(t.vars).forEach(([k, val]) => document.documentElement.style.setProperty(k, val));
+  Object.entries(t.vars).forEach(([k, val]) => document.documentElement.style.setProperty(k, String(val)));
   try { localStorage.setItem('theme', name); } catch (e) {}
 }
 try { applyTheme(localStorage.getItem('theme') || 'modern'); } catch (e) { applyTheme('modern'); }
 
-let showThemeSheet = false, CURRENT_USER = null;
-let showAddSheet = false, addMode = null, editing = null;
+let showThemeSheet = false, CURRENT_USER: any = null;
+let showAddSheet = false, addMode: string | null = null, editing: { table: string; id: string } | null = null;
 
 // ====== INLINE MATH CALCULATOR ======
-function evalMathExpr(expr) {
+function evalMathExpr(expr: unknown): number | null {
   if (!expr) return null;
   const s = String(expr).trim();
   if (!/[\+\-\*\/]/.test(s)) return null;
@@ -292,29 +308,29 @@ function evalMathExpr(expr) {
   return null;
 }
 
-function formatInputCurrency(inputEl) {
+function formatInputCurrency(inputEl: HTMLInputElement | null): void {
   if (!inputEl) return;
   
-  let badge = inputEl.nextElementSibling;
+  let badge = inputEl.nextElementSibling as HTMLElement | null;
   if (!badge || !badge.classList.contains('math-calc-badge')) {
     badge = document.createElement('div');
     badge.className = 'math-calc-badge';
     badge.style.cssText = 'font-size:11.5px;color:var(--main);font-weight:600;margin-top:-6px;margin-bottom:8px;display:none;background:var(--card-subtle);padding:4px 8px;border-radius:6px';
-    inputEl.parentNode.insertBefore(badge, inputEl.nextSibling);
+    inputEl.parentNode?.insertBefore(badge, inputEl.nextSibling);
   }
 
   inputEl.addEventListener('input', function() {
     const raw = this.value;
     const calcResult = evalMathExpr(raw);
-    if (calcResult !== null) {
+    if (calcResult !== null && badge) {
       badge.style.display = 'block';
       badge.innerHTML = `🧮 Hasil hitung: <b>${rp(calcResult)}</b> (Tekan Enter/Selesai untuk menerapkan)`;
       return;
-    } else {
+    } else if (badge) {
       badge.style.display = 'none';
     }
 
-    let cursorPosition = this.selectionStart;
+    let cursorPosition = this.selectionStart || 0;
     let val = this.value.replace(/[^0-9]/g, '');
     if (val === '') { this.value = ''; return; }
     let formatted = parseInt(val, 10).toLocaleString('id-ID');
@@ -327,7 +343,7 @@ function formatInputCurrency(inputEl) {
     const calcResult = evalMathExpr(this.value);
     if (calcResult !== null) {
       this.value = calcResult.toLocaleString('id-ID');
-      badge.style.display = 'none';
+      if (badge) badge.style.display = 'none';
       this.dispatchEvent(new Event('input'));
     }
   });
@@ -338,28 +354,28 @@ function formatInputCurrency(inputEl) {
       if (calcResult !== null) {
         e.preventDefault();
         this.value = calcResult.toLocaleString('id-ID');
-        badge.style.display = 'none';
+        if (badge) badge.style.display = 'none';
         this.dispatchEvent(new Event('input'));
       }
     }
   });
 }
 
-function toggleAddSheet(v) { 
+function toggleAddSheet(v: boolean) { 
   showAddSheet = v; 
   if (!v) { addMode = null; editing = null; } 
   render(); 
   if (v) {
     setTimeout(() => {
       ['qa_bal', 'qt_amt', 'qf_amt', 'qi_amt', 'qi_tot', 'qs_tgt', 'qb_limit', 'qr_amt', 'm_amt_'].forEach(id => {
-        const el = document.querySelector(`input[id^="${id}"]`);
+        const el = document.querySelector(`input[id^="${id}"]`) as HTMLInputElement | null;
         if (el) formatInputCurrency(el);
       });
     }, 50);
   }
 }
 
-function goAdd(mode) { 
+function goAdd(mode: string | null) { 
   editing = null; 
   addMode = mode; 
   if (mode !== null) {
@@ -368,7 +384,7 @@ function goAdd(mode) {
   render(); 
   setTimeout(() => {
     ['qa_bal', 'qt_amt', 'qf_amt', 'qi_amt', 'qi_tot', 'qs_tgt', 'qb_limit', 'qr_amt', 'm_amt_'].forEach(id => {
-      const el = document.querySelector(`input[id^="${id}"]`);
+      const el = document.querySelector(`input[id^="${id}"]`) as HTMLInputElement | null;
       if (el) formatInputCurrency(el);
     });
   }, 50); 
@@ -390,7 +406,7 @@ function openTransfer() {
 }
 
 // ====== DUPLIKASI TRANSAKSI ======
-function duplicateTx(id) {
+function duplicateTx(id: string) {
   const t = S.tx.find(x => x.id === id);
   if (!t) return;
   editing = null;
@@ -398,26 +414,32 @@ function duplicateTx(id) {
   showAddSheet = true;
   render();
   setTimeout(() => {
-    if ($('qt_amt')) {
-      $('qt_amt').value = toCurVal(t.amount);
-      formatInputCurrency($('qt_amt'));
+    const amtEl = $('qt_amt') as HTMLInputElement | null;
+    if (amtEl) {
+      amtEl.value = String(toCurVal(t.amount));
+      formatInputCurrency(amtEl);
     }
-    if ($('qt_type')) $('qt_type').value = t.type || 'expense';
-    if ($('qt_acc')) $('qt_acc').value = t.account_id;
-    if ($('qt_cat')) $('qt_cat').value = t.category || '';
-    if ($('qt_note')) $('qt_note').value = t.note || '';
-    if ($('qt_date')) $('qt_date').value = today();
+    const typeEl = $('qt_type') as HTMLInputElement | null;
+    if (typeEl) typeEl.value = t.type || 'expense';
+    const accEl = $('qt_acc') as HTMLSelectElement | null;
+    if (accEl) accEl.value = t.account_id;
+    const catEl = $('qt_cat') as HTMLInputElement | null;
+    if (catEl) catEl.value = t.category || '';
+    const noteEl = $('qt_note') as HTMLInputElement | null;
+    if (noteEl) noteEl.value = t.note || '';
+    const dateEl = $('qt_date') as HTMLInputElement | null;
+    if (dateEl) dateEl.value = today();
     toast('Data transaksi disalin. Silakan periksa & simpan.', 'info');
   }, 60);
 }
 
-function editRow(table, id) {
+function editRow(table: string, id: string) {
   editing = { table, id };
-  addMode = { transactions: 'trx', installments: 'inst', savings: 'sav', accounts: 'accs', budgets: 'budget', recurring: 'recurring' }[table];
+  addMode = ({ transactions: 'trx', installments: 'inst', savings: 'sav', accounts: 'accs', budgets: 'budget', recurring: 'recurring' } as Record<string, string>)[table] || null;
   showAddSheet = true; render();
   setTimeout(() => {
     ['qa_bal', 'qt_amt', 'qf_amt', 'qi_amt', 'qi_tot', 'qs_tgt', 'qb_limit', 'qr_amt', 'm_amt_'].forEach(id => {
-      const el = document.querySelector(`input[id^="${id}"]`);
+      const el = document.querySelector(`input[id^="${id}"]`) as HTMLInputElement | null;
       if (el) formatInputCurrency(el);
     });
   }, 50);
@@ -425,8 +447,8 @@ function editRow(table, id) {
 
 // ====== QUICK CATEGORY SELECTOR ======
 const QUICK_CATS = ['Makan', 'Transport', 'Belanja', 'Gaji', 'Tagihan', 'Hiburan', 'Kesehatan', 'Pendidikan'];
-function selectTxType(type, btn) {
-  const hidden = document.getElementById('qt_type');
+function selectTxType(type: string, btn?: HTMLElement) {
+  const hidden = document.getElementById('qt_type') as HTMLInputElement | null;
   if (hidden) hidden.value = type;
   if (btn && btn.parentElement) {
     btn.parentElement.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
@@ -434,8 +456,8 @@ function selectTxType(type, btn) {
   }
 }
 
-function pickCat(c, targetId, chipEl) {
-  const el = $(targetId);
+function pickCat(c: string, targetId: string, chipEl?: HTMLElement) {
+  const el = $(targetId) as HTMLInputElement | null;
   if (el) { el.value = c; el.focus(); }
   if (chipEl && chipEl.parentElement) {
     chipEl.parentElement.querySelectorAll('.cat-chip').forEach(ch => ch.classList.remove('active'));
@@ -472,7 +494,7 @@ function addSheetHtml() {
   const needsAcc = (addMode === 'trx' || addMode === 'inst' || addMode === 'recurring') && !S.acc.length;
   const needs2Acc = addMode === 'transfer' && S.acc.length < 2;
   let body;
-  const accSel = (id, selId) => `<select id="${id}">${S.acc.map(a => `<option value="${a.id}" ${selId === a.id ? 'selected' : ''}>${esc(a.name)} (Saldo: ${rp(accBal(a))})</option>`).join('')}</select>`;
+  const accSel = (id: string, selId?: string | null) => `<select id="${id}">${S.acc.map(a => `<option value="${a.id}" ${selId === a.id ? 'selected' : ''}>${esc(a.name)} (Saldo: ${rp(accBal(a))})</option>`).join('')}</select>`;
   
   if (needsAcc) {
     body = `<div class="mute" style="margin-bottom:12px">Anda belum memiliki rekening. Buat rekening pertama terlebih dahulu:</div>
@@ -603,7 +625,7 @@ function pickTheme(name: string) {
 }
 
 let settingsTab = 'tema';
-function setSettingsTab(t) { settingsTab = t; render(); }
+function setSettingsTab(t: string) { settingsTab = t; render(); }
 
 function themeListHtml() {
   return Object.entries(THEMES).map(([k, t]) => `
@@ -618,7 +640,7 @@ function themeListHtml() {
 // ====== FOTO PROFIL & AVATAR PENGGUNA ======
 const PRESET_AVATARS = ['💼', '🦊', '🐼', '🦁', '🚀', '💎', '🐱', '☕'];
 
-function avatarImgHtml(u, size = 32) {
+function avatarImgHtml(u: any, size = 32) {
   const av = u && u.user_metadata && u.user_metadata.avatar_url;
   const uname = (u && u.user_metadata && u.user_metadata.username) || '';
   const email = (u && u.email) || 'User';
@@ -641,7 +663,7 @@ function userAvatarBtn(size = 32) {
   </div>`;
 }
 
-function compressImageToAvatar(file, targetSize = 200) {
+function compressImageToAvatar(file: File, targetSize = 200): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => {
@@ -650,7 +672,7 @@ function compressImageToAvatar(file, targetSize = 200) {
         const canvas = document.createElement('canvas');
         canvas.width = targetSize;
         canvas.height = targetSize;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d')!;
         const minDim = Math.min(img.width, img.height);
         const sx = (img.width - minDim) / 2;
         const sy = (img.height - minDim) / 2;
@@ -662,14 +684,14 @@ function compressImageToAvatar(file, targetSize = 200) {
         }
       };
       img.onerror = reject;
-      img.src = e.target.result;
+      img.src = (e.target as FileReader).result as string;
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
 
-async function uploadProfilePhoto(file) {
+async function uploadProfilePhoto(file: File) {
   if (!file) return;
   if (!CURRENT_USER) return toast('Harap login terlebih dahulu', 'warn');
   
@@ -711,18 +733,19 @@ async function uploadProfilePhoto(file) {
     } catch(e) {}
 
     CURRENT_USER = authData.user;
+    (window as any).CURRENT_USER = CURRENT_USER;
     saveToLocalCache();
     toast('Foto profil berhasil diperbarui!', 'success');
     render();
-  } catch(err) {
+  } catch(err: any) {
     console.error('Upload avatar error:', err);
-    toast('Gagal mengunggah foto: ' + err.message, 'error');
+    toast('Gagal mengunggah foto: ' + (err?.message || 'Terjadi kesalahan'), 'error');
   } finally {
     if (statusEl) statusEl.innerHTML = '';
   }
 }
 
-async function setPresetAvatar(av) {
+async function setPresetAvatar(av: string) {
   if (!CURRENT_USER) return;
   try {
     const { data: authData, error: authErr } = await sb.auth.updateUser({
@@ -740,11 +763,12 @@ async function setPresetAvatar(av) {
     } catch(e) {}
 
     CURRENT_USER = authData.user;
+    (window as any).CURRENT_USER = CURRENT_USER;
     saveToLocalCache();
     toast('Avatar profil berhasil diubah!', 'success');
     render();
-  } catch(err) {
-    toast('Gagal mengubah avatar: ' + err.message, 'error');
+  } catch(err: any) {
+    toast('Gagal mengubah avatar: ' + (err?.message || 'Terjadi kesalahan'), 'error');
   }
 }
 
@@ -853,7 +877,7 @@ async function boot() {
   }
 }
 
-async function load(skipRecurring) {
+async function load(skipRecurring?: boolean) {
   try {
     const [a, t, i, sv, mv, bu, rc] = await Promise.all([
       sb.from('accounts').select('*').order('created_at'),
@@ -969,39 +993,60 @@ async function finishRecovery() {
   showRecovery = false; toast('Password berhasil diganti. Anda sudah masuk.', 'success'); load();
 }
 
-function needCred() { if (!v('em').trim() || v('pw').length < 6) { alert('Isi email dan kata sandi (min. 6 karakter).'); return true; } }
+function needCred(): boolean {
+  if (!v('em').trim() || v('pw').length < 6) {
+    alert('Isi email dan kata sandi (min. 6 karakter).');
+    return true;
+  }
+  return false;
+}
 
 async function login() {
   if (needCred()) return;
   const email = v('em').trim();
   const { data, error } = await sb.auth.signInWithPassword({ email, password: v('pw') });
   if (error) return alert('Login gagal: ' + error.message);
-  CURRENT_USER = data.user; toast('Berhasil masuk', 'success'); load();
+  CURRENT_USER = data.user;
+  (window as any).CURRENT_USER = CURRENT_USER;
+  toast('Berhasil masuk', 'success');
+  load();
 }
 
 async function signup() {
   if (needCred()) return;
   const { data, error } = await sb.auth.signUp({ email: v('em').trim(), password: v('pw') });
   if (error) return alert(error.message);
-  if (data.session) { CURRENT_USER = data.user; toast('Akun berhasil dibuat', 'success'); load(); } 
-  else alert('Cek email kamu untuk konfirmasi pendaftaran, lalu login.');
+  if (data.session) {
+    CURRENT_USER = data.user;
+    (window as any).CURRENT_USER = CURRENT_USER;
+    toast('Akun berhasil dibuat', 'success');
+    load();
+  } else {
+    alert('Cek email kamu untuk konfirmasi pendaftaran, lalu login.');
+  }
 }
 
-async function logout() { await sb.auth.signOut(); CURRENT_USER = null; showThemeSheet = false; authView(); }
+async function logout() {
+  await sb.auth.signOut();
+  CURRENT_USER = null;
+  (window as any).CURRENT_USER = null;
+  showThemeSheet = false;
+  authView();
+}
 
 const accOpts = () => S.acc.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
-const accBal = a => (BAL_CACHE[a.id] !== undefined ? BAL_CACHE[a.id] : +a.balance);
-const savBal = x => sum(S.mv.filter(m => m.saving_id === x.id), 'deposit') - sum(S.mv.filter(m => m.saving_id === x.id), 'withdraw');
-const savTotal = () => S.sav.reduce((t, x) => t + savBal(x), 0);
-const accName = id => (S.acc.find(a => a.id === id) || {}).name || '-';
+const accBal = (a: any) => (BAL_CACHE[a.id] !== undefined ? BAL_CACHE[a.id] : +a.balance);
+const savBal = (x: any) => sum(S.mv.filter(m => m.saving_id === x.id), 'deposit') - sum(S.mv.filter(m => m.saving_id === x.id), 'withdraw');
+const savTotal = () => S.sav.reduce((t: number, x: any) => t + savBal(x), 0);
+const accName = (id: string) => (S.acc.find(a => a.id === id) || {}).name || '-';
 
-const CAT_ICON = {
+const CAT_ICON: Record<string, string> = {
   makan: '🍜', makanan: '🍜', minuman: '🥤', transport: '🚗', bensin: '⛽', belanja: '🛍️',
   gaji: '💰', tagihan: '🧾', listrik: '💡', pulsa: '📱', kesehatan: '💊', cicilan: '🏦',
   hiburan: '🎬', pendidikan: '📚', hadiah: '🎁', transfer: '🔁', lainnya: '💳'
 };
-const catIcon = k => CAT_ICON[(k || '').toLowerCase()] || (k ? '💳' : '💳');
-const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const catIcon = (k?: string) => CAT_ICON[(k || '').toLowerCase()] || (k ? '💳' : '💳');
+const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c] || c));
 
 // ====== RENDER UI UTAMA ======
 function render() {
@@ -1045,7 +1090,7 @@ function home() {
   const cur = S.tx.filter(t => t.date.startsWith(m));
   const inc = sum(cur, 'income'), exp = sum(cur, 'expense');
   const total = S.acc.reduce((s, a) => s + accBal(a), 0);
-  const cat = {};
+  const cat: Record<string, number> = {};
   cur.filter(t => t.type === 'expense').forEach(t => { const k = t.category || 'Lainnya'; cat[k] = (cat[k] || 0) + +t.amount; });
   const cats = Object.entries(cat).sort((a, b) => b[1] - a[1]);
   const months = [...Array(6)].map((_, i) => shiftMonth(m, i - 5));
@@ -1053,7 +1098,7 @@ function home() {
 
     const prevMonth = shiftMonth(m, -1);
     const prevExp = sum(S.tx.filter(t => t.date.startsWith(prevMonth)), 'expense');
-    const dayNum = m === thisMonth ? new Date().getDate() : new Date(m.split('-')[0], m.split('-')[1], 0).getDate();
+    const dayNum = m === thisMonth ? new Date().getDate() : new Date(+m.split('-')[0], +m.split('-')[1], 0).getDate();
     const dailyAvg = Math.round(exp / Math.max(1, dayNum));
     let diffBadge = '';
     if (prevExp > 0) {
@@ -1099,7 +1144,7 @@ function home() {
       <button class="monthNav" onclick="changeMonth(1)" ${m >= thisMonth ? 'disabled' : ''}>›</button>
     </div>
 
-    ${m !== thisMonth ? `<div class="mute" style="margin-top:6px;font-size:12px;color:var(--hero-mute)">Periode lampau · <a href="#" onclick="S.month=thisMonth;render();return false" style="color:#fff;text-decoration:underline">Kembali ke bulan ini</a></div>` : ''}
+    ${m !== thisMonth ? `<div class="mute" style="margin-top:6px;font-size:12px;color:var(--hero-mute)">Periode lampau · <a href="#" onclick="S.month='${thisMonth}';render();return false" style="color:#fff;text-decoration:underline">Kembali ke bulan ini</a></div>` : ''}
 
     <div class="bal-label">Total Saldo Likuid</div>
     <div class="bal">${rp(total)}</div>
@@ -1250,9 +1295,10 @@ function home() {
 }
 
 // ====== VIEW: TRANSAKSI DENGAN GROUPING TANGGAL & SUB-TOTAL ======
-let txFilter = { q: '', cat: '', from: '', to: '' }, searchTimeout;
-function setTxFilter(k, val) { txFilter[k] = val; render(); }
-function handleSearch(val) { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { setTxFilter('q', val); }, 250); }
+let txFilter: { q: string; cat: string; from: string; to: string } = { q: '', cat: '', from: '', to: '' };
+let searchTimeout: any;
+function setTxFilter(k: 'q' | 'cat' | 'from' | 'to', val: string) { txFilter[k] = val; render(); }
+function handleSearch(val: string) { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { setTxFilter('q', val); }, 250); }
 function clearTxFilter() { txFilter = { q: '', cat: '', from: '', to: '' }; render(); }
 
 function trx() {
@@ -1269,7 +1315,7 @@ function trx() {
   const filInc = sum(list, 'income'), filExp = sum(list, 'expense');
 
   // Group by date
-  const groups = {};
+  const groups: Record<string, typeof S.tx> = {};
   list.slice(0, active ? 300 : 80).forEach(t => {
     if (!groups[t.date]) groups[t.date] = [];
     groups[t.date].push(t);
@@ -1394,7 +1440,7 @@ function accs() {
   `).join('') || '<div class="card mute" style="text-align:center;padding:32px">Belum ada rekening. Tekan tombol di atas untuk membuat rekening baru.</div>'}`;
 }
 
-function filterByAcc(accId) {
+function filterByAcc(accId: string) {
   const acc = S.acc.find(a => a.id === accId);
   if (acc) {
     txFilter = { q: acc.name, cat: '', from: '', to: '' };
@@ -1404,8 +1450,8 @@ function filterByAcc(accId) {
 }
 
 // ====== VIEW: CICILAN (INSTALLMENTS) ======
-let instFilter = 'active'; // 'active' | 'done'
-function setInstFilter(f) { instFilter = f; render(); }
+let instFilter: 'active' | 'done' = 'active'; // 'active' | 'done'
+function setInstFilter(f: 'active' | 'done') { instFilter = f; render(); }
 
 function inst() {
   const activeList = S.inst.filter(i => i.paid_months < i.total_months);
@@ -1524,7 +1570,7 @@ function sav() {
 }
 
 // Modal Setor / Tarik Tabungan Cepat
-function openSavModal(savId, action) {
+function openSavModal(savId: string, action: string) {
   const x = S.sav.find(s => s.id === savId);
   if (!x) return;
   const isDeposit = action === 'deposit';
@@ -1540,20 +1586,20 @@ function openSavModal(savId, action) {
           <select id="modal_sav_acc">${accOpts()}</select>
         ` : ''}
         <button style="width:100%;margin-top:10px" onclick="execSavMove('${savId}','${action}')">${isDeposit ? 'Konfirmasi Setor' : 'Konfirmasi Tarik'}</button>
-        <button class="ghost" style="width:100%;margin-top:6px" onclick="$('savModal').remove()">Batal</button>
+        <button class="ghost" style="width:100%;margin-top:6px" onclick="const m = document.getElementById('savModal'); if(m) m.remove();">Batal</button>
       </div>
     </div>
   `;
   document.body.insertAdjacentHTML('beforeend', html);
   setTimeout(() => {
-    const el = $('modal_sav_amt');
+    const el = $('modal_sav_amt') as HTMLInputElement | null;
     if (el) { el.focus(); formatInputCurrency(el); }
   }, 50);
 }
 
-async function execSavMove(savId, action) {
+async function execSavMove(savId: string, action: string) {
   const amt = inIDR('modal_sav_amt');
-  if (!(amt > 0)) return alert('Isi nominal dengan benar.');
+  if (!(amt && amt > 0)) return alert('Isi nominal dengan benar.');
   const x = S.sav.find(s => s.id === savId);
   if (action === 'withdraw') {
     if (amt > savBal(x)) return alert('Saldo tabungan tidak mencukupi.');
@@ -1579,20 +1625,22 @@ async function execSavMove(savId, action) {
 
 // ====== CSV IMPORT & SAMPLE DOWNLOAD ======
 function downloadSampleCsv() {
-  const csvContent = "data:text/csv;charset=utf-8," + "Tanggal,Rekening,Tipe,Kategori,Catatan,Jumlah\n2026-11-01,BCA,expense,Makan,Makan Siang Resto,45000\n2026-11-02,BCA,income,Gaji,Gaji Bulanan,7500000\n2026-11-03,Dompet,expense,Transport,Bensin Motor,25000";
-  const encodedUri = encodeURI(csvContent);
+  const csvContent = "Tanggal,Rekening,Tipe,Kategori,Catatan,Jumlah\n2026-11-01,BCA,expense,Makan,Makan Siang Resto,45000\n2026-11-02,BCA,income,Gaji,Gaji Bulanan,7500000\n2026-11-03,Dompet,expense,Transport,Bensin Motor,25000";
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
+  link.setAttribute("href", url);
   link.setAttribute("download", "template-mutasi-duitku.csv");
   document.body.appendChild(link);
   link.click();
   link.remove();
+  URL.revokeObjectURL(url);
 }
 
-function parseCSV(text) {
+function parseCSV(text: string): Record<string, string>[] {
   const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim() !== '');
-  const splitLine = line => {
-    const out = []; let cur = '', q = false;
+  const splitLine = (line: string): string[] => {
+    const out: string[] = []; let cur = '', q = false;
     for (let i = 0; i < line.length; i++) {
       const c = line[i];
       if (q) { if (c === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
@@ -1601,21 +1649,28 @@ function parseCSV(text) {
     out.push(cur); return out.map(s => s.trim());
   };
   const header = splitLine(lines[0]).map(h => h.toLowerCase());
-  const rows = [];
-  for (let i = 1; i < lines.length; i++) { const cells = splitLine(lines[i]); const obj = {}; header.forEach((h, idx) => obj[h] = cells[idx] ?? ''); rows.push(obj); }
+  const rows: Record<string, string>[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cells = splitLine(lines[i]);
+    const obj: Record<string, string> = {};
+    header.forEach((h, idx) => obj[h] = cells[idx] ?? '');
+    rows.push(obj);
+  }
   return rows;
 }
 
-async function importCsv(file) {
+async function importCsv(file: File) {
   if (!file) return;
   const box = $('impStatus');
-  box.innerHTML = '<div class="mute" style="margin-top:8px">⏳ Membaca dan menganalisis mutasi CSV...</div>';
+  if (box) box.innerHTML = '<div class="mute" style="margin-top:8px">⏳ Membaca dan menganalisis mutasi CSV...</div>';
   try {
     const text = await file.text();
     const rows = parseCSV(text);
-    const col = (o, names) => { for (const n of names) if (o[n] !== undefined && o[n] !== '') return o[n]; return ''; };
-    const accCache = {}; S.acc.forEach(a => accCache[a.name.toLowerCase()] = a.id);
-    const toInsert = []; let skipped = 0;
+    const col = (o: Record<string, string>, names: string[]) => { for (const n of names) if (o[n] !== undefined && o[n] !== '') return o[n]; return ''; };
+    const accCache: Record<string, string> = {};
+    S.acc.forEach(a => accCache[a.name.toLowerCase()] = a.id);
+    const toInsert: any[] = [];
+    let skipped = 0;
 
     for (const r of rows) {
       let dateRaw = col(r, ['tanggal', 'date']), date = dateRaw;
@@ -1643,11 +1698,11 @@ async function importCsv(file) {
     }
 
     if (toInsert.length) await run(sb.from('transactions').insert(toInsert));
-    box.innerHTML = '';
+    if (box) box.innerHTML = '';
     toast(`✅ Berhasil impor ${toInsert.length} transaksi${skipped ? ` (${skipped} dilewati)` : ''}`, 'success');
     load();
   } catch (e) {
-    box.innerHTML = '<div class="mute" style="margin-top:8px;color:var(--out)">⚠️ Format file CSV tidak didukung atau terjadi kesalahan pembacaan.</div>';
+    if (box) box.innerHTML = '<div class="mute" style="margin-top:8px;color:var(--out)">⚠️ Format file CSV tidak didukung atau terjadi kesalahan pembacaan.</div>';
   }
 }
 
@@ -1768,15 +1823,17 @@ async function exportXlsx() {
   catch (e) { return alert('Gagal memuat library Excel. Periksa koneksi internet Anda.'); }
   
   toast('Sedang memformat laporan Excel...', 'info');
-  const m = v('x_m'), cur = RATES[CUR] ? CUR : 'IDR', cv = n => +(n * RATES[cur]).toFixed(2);
+  const m = v('x_m'), cur = RATES[CUR] ? CUR : 'IDR', cv = (n: number) => +(n * (RATES[cur] || 1)).toFixed(2);
   const fmt = cur === 'IDR' || cur === 'JPY' ? '#,##0' : '#,##0.00';
   const tx = S.tx.filter(t => !m || t.date.startsWith(m)).sort((a, b) => a.date.localeCompare(b.date));
   const inc = sum(tx, 'income'), exp = sum(tx, 'expense');
   const periode = m ? new Date(m + '-02').toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : 'Semua Periode';
   
-  const wb = new ExcelJS.Workbook();
+  const ExcelJSClass = (window as any).ExcelJS || (typeof ExcelJS !== 'undefined' ? ExcelJS : null);
+  if (!ExcelJSClass) return alert('Library Excel belum siap.');
+  const wb = new ExcelJSClass.Workbook();
   const GREEN = 'FF059669', RED = 'FFE11D48', BLUE = 'FF2563EB', DARK = 'FF0F172A', LIGHT = 'FFF8FAFC', WHITE = 'FFFFFFFF';
-  const fill = c => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: c } });
+  const fill = (c: string) => ({ type: 'pattern', pattern: 'solid', fgColor: { argb: c } });
   const thin = { style: 'thin', color: { argb: 'FFE2E8F0' } };
   const box = { top: thin, bottom: thin, left: thin, right: thin };
 
@@ -1790,8 +1847,8 @@ async function exportXlsx() {
   [['PEMASUKAN', inc, GREEN, 'A'], ['PENGELUARAN', exp, RED, 'C'], ['NETTO SURPLUS', inc - exp, BLUE, 'E']].forEach(([label, val, color, col]) => {
     const c1 = col + boxRow, c2 = String.fromCharCode(col.charCodeAt(0) + 1) + boxRow;
     r.mergeCells(c1 + ':' + c2); const cell = r.getCell(c1);
-    cell.value = { richText: [{ font: { bold: true, size: 9, color: { argb: WHITE } }, text: label + '\n' }, { font: { bold: true, size: 14, color: { argb: WHITE } }, text: cur + ' ' + val.toLocaleString('id-ID', { maximumFractionDigits: 2 }) }] };
-    cell.fill = fill(color); cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    cell.value = { richText: [{ font: { bold: true, size: 9, color: { argb: WHITE } }, text: label + '\n' }, { font: { bold: true, size: 14, color: { argb: WHITE } }, text: cur + ' ' + (val as number).toLocaleString('id-ID', { maximumFractionDigits: 2 }) }] };
+    cell.fill = fill(color as string); cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
     r.getRow(boxRow).height = 38;
   });
 
@@ -1821,7 +1878,7 @@ async function exportXlsx() {
 }
 
 // ====== HELPER DECIMAL & CURRENCY PARSER (ANTI SALAH 20.000,00 JADI 2 JUTA) ======
-function parseReceiptAmount(rawStr) {
+function parseReceiptAmount(rawStr: unknown): number {
   if (!rawStr) return 0;
   let s = String(rawStr).trim();
   s = s.replace(/^[rR][pP]\.?\s*/g, '');
@@ -1853,26 +1910,27 @@ function parseReceiptAmount(rawStr) {
 }
 
 // Convert File to Base64
-async function fileToBase64(file) {
+async function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
+    reader.onload = () => resolve(reader.result as string);
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
 
 // ====== PRE-PROCESSING GAMBAR STRUK VIA HTML5 CANVAS (UNTUK LOCAL OCR) ======
-async function preprocessReceiptImage(file) {
+async function preprocessReceiptImage(file: File): Promise<string | File> {
   return new Promise((resolve) => {
     const img = new Image();
     const reader = new FileReader();
     reader.onload = (e) => {
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        let width = img.width, height = img.height;
+        const ctx = canvas.getContext('2d')!;
         const maxDim = 1400;
+        let width = img.width;
+        let height = img.height;
         if (width > maxDim || height > maxDim) {
           if (width > height) {
             height = Math.round((height * maxDim) / width);
@@ -1909,14 +1967,14 @@ async function preprocessReceiptImage(file) {
           resolve(file);
         }
       };
-      img.src = e.target.result;
+      img.src = (e.target as FileReader).result as string;
     };
     reader.readAsDataURL(file);
   });
 }
 
 // ====== DUAL ENGINE OCR SCANNER (AI GEMINI VISION + HIGH-ACCURACY LOCAL) ======
-async function scanReceipt(file: any, p?: string) {
+async function scanReceipt(file: File, p?: string) {
   p = p || 'qt_';
   if (!file) return;
   const setBox = (html: string) => {
@@ -1966,8 +2024,9 @@ Hanya kembalikan JSON murni tanpa markdown triple backticks.`;
 
       const resData = await response.json();
       const rawAnswer = resData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      const cleanJson = rawAnswer.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(cleanJson);
+      const cleanJson = rawAnswer.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
+      const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : cleanJson);
 
       const totalVal = Math.round(Number(parsed.total) || 0);
       const merchantVal = (parsed.merchant || '').trim();
@@ -2171,7 +2230,7 @@ if (typeof window !== 'undefined') {
   (window as any).scanReceipt = scanReceipt;
 }
 
-async function addSav(p) {
+async function addSav(p?: string) {
   p = p || 's_';
   if (!v(p + 'name')) return alert('Isi nama tabungan.');
   const t = inIDR(p + 'tgt'); if (t === null) return;
@@ -2181,7 +2240,7 @@ async function addSav(p) {
   if (await run(q)) { if (p[0] === 'q') { showAddSheet = false; addMode = null; editing = null; } toast('Tabungan berhasil disimpan', 'success'); load(); }
 }
 
-async function addBudget(p) {
+async function addBudget(p?: string) {
   p = p || 'qb_';
   const cat = v(p + 'cat').trim(); if (!cat) return alert('Isi kategori pengeluaran.');
   const lim = inIDR(p + 'limit'); if (lim === null) return;
@@ -2192,7 +2251,7 @@ async function addBudget(p) {
   if (await run(q)) { showAddSheet = false; addMode = null; editing = null; toast('Anggaran budget tersimpan', 'success'); load(); }
 }
 
-async function addRecurring(p) {
+async function addRecurring(p?: string) {
   p = p || 'qr_';
   const name = v(p + 'name').trim(); if (!name) return alert('Isi nama transaksi rutin.');
   const amt = inIDR(p + 'amt'); if (amt === null) return;
@@ -2205,7 +2264,7 @@ async function addRecurring(p) {
   if (await run(q)) { showAddSheet = false; addMode = null; editing = null; toast('Transaksi rutin berhasil disimpan', 'success'); load(); }
 }
 
-async function addTransfer(evt) {
+async function addTransfer(evt?: Event) {
   const from = v('qf_from'), to = v('qf_to');
   if (!from || !to || from === to) return toast('Pilih dua rekening yang berbeda.', 'warn');
   const amt = inIDR('qf_amt'); 
@@ -2213,7 +2272,7 @@ async function addTransfer(evt) {
   const note = v('qf_note').trim(), date = v('qf_date') || today();
   const fromAcc = S.acc.find(a => a.id === from), toAcc = S.acc.find(a => a.id === to);
   
-  const targetBtn = (evt && evt.target && evt.target.tagName === 'BUTTON') ? evt.target : document.querySelector('button[onclick*="addTransfer"]');
+  const targetBtn = (evt && evt.target && (evt.target as any).tagName === 'BUTTON') ? (evt.target as HTMLButtonElement) : document.querySelector('button[onclick*="addTransfer"]') as HTMLButtonElement | null;
   if (targetBtn) { targetBtn.disabled = true; targetBtn.innerText = 'Memproses transfer...'; }
   try {
     const ok1 = await run(sb.from('transactions').insert({ account_id: from, type: 'expense', amount: amt, category: 'Transfer', note: 'Ke ' + (toAcc ? toAcc.name : '') + (note ? ' - ' + note : ''), date }));
@@ -2229,7 +2288,7 @@ async function addTransfer(evt) {
   }
 }
 
-async function addAcc(p) {
+async function addAcc(p?: string) {
   p = p || 'a_';
   if (!v(p + 'name')) return alert('Isi nama rekening.');
   const bal = inIDR(p + 'bal'); if (bal === null) return;
@@ -2239,7 +2298,7 @@ async function addAcc(p) {
   if (await run(q)) { if (p[0] === 'q') { showAddSheet = false; addMode = null; editing = null; } toast('Rekening berhasil disimpan', 'success'); load(); }
 }
 
-async function addTx(p) {
+async function addTx(p?: string) {
   p = p || 't_';
   const amt = inIDR(p + 'amt'); if (amt === null) return;
   if (!(amt > 0)) return alert('Isi nominal transaksi.');
@@ -2249,7 +2308,7 @@ async function addTx(p) {
   if (await run(q)) { if (p[0] === 'q') { showAddSheet = false; addMode = null; editing = null; } toast('Transaksi tersimpan', 'success'); load(); }
 }
 
-async function addInst(p) {
+async function addInst(p?: string) {
   p = p || 'i_';
   const mo = inIDR(p + 'amt'); if (mo === null) return;
   if (!v(p + 'name') || !(mo > 0) || !(+v(p + 'tot') > 0)) return alert('Lengkapi data cicilan.');
@@ -2264,7 +2323,10 @@ async function saveUsername() {
   if (!name) return alert('Isi username.');
   const { data, error } = await sb.auth.updateUser({ data: { username: name } });
   if (error) return alert(error.message);
-  CURRENT_USER = data.user; toast('Username berhasil disimpan', 'success'); render();
+  CURRENT_USER = data.user;
+  (window as any).CURRENT_USER = CURRENT_USER;
+  toast('Username berhasil disimpan', 'success');
+  render();
 }
 
 async function changePassword() {
@@ -2273,10 +2335,14 @@ async function changePassword() {
   if (p1 !== p2) return alert('Konfirmasi password baru tidak cocok.');
   const { error } = await sb.auth.updateUser({ password: p1 });
   if (error) return alert(error.message);
-  $('pf_pw1').value = ''; $('pf_pw2').value = ''; toast('Kata sandi berhasil diperbarui', 'success');
+  const el1 = $('pf_pw1') as HTMLInputElement | null;
+  const el2 = $('pf_pw2') as HTMLInputElement | null;
+  if (el1) el1.value = '';
+  if (el2) el2.value = '';
+  toast('Kata sandi berhasil diperbarui', 'success');
 }
 
-async function pay(id) {
+async function pay(id: string) {
   const i = S.inst.find(x => x.id === id);
   if (!i || i.paid_months >= i.total_months) return;
   if (!confirm(`Bayar cicilan ${i.name} sebesar ${rp(i.monthly_amount)} dari ${accName(i.account_id)}?`)) return;
@@ -2284,7 +2350,7 @@ async function pay(id) {
   if (ok && await run(sb.from('installments').update({ paid_months: i.paid_months + 1 }).eq('id', id))) { toast('Cicilan bulan ini berhasil dibayar', 'success'); load(); }
 }
 
-async function del(table, id) {
+async function del(table: string, id: string) {
   if (!confirm('Hapus data ini secara permanen?')) return;
   if (await run(sb.from(table).delete().eq('id', id))) { toast('Data telah dihapus', 'success'); load(); }
 }
@@ -2293,7 +2359,7 @@ async function del(table, id) {
 function bindWindowGlobals() {
   if (typeof window === 'undefined') return;
   const globals: Record<string, any> = {
-    S, sb, v, $, rp, esc, inIDR, toCurVal, today, ym,
+    S, sb, CURRENT_USER, v, $, rp, esc, inIDR, toCurVal, today, ym,
     accBal, accName, savBal, savTotal, render, toggleAddSheet,
     goAdd, openTransfer, addTransfer,
     togglePrivacy: () => { togglePrivacy(); render(); },
@@ -2304,6 +2370,7 @@ function bindWindowGlobals() {
     uploadProfilePhoto, setPresetAvatar, removeAvatar, saveUsername, changePassword,
     logout, login, signup, sendReset, finishRecovery, toggleForgot,
     promptGeminiKey, saveGeminiKey, scanReceipt, printMonthlyReport, closePrintModal,
+    openReportInNewTab: () => (window as any).openReportInNewTab && (window as any).openReportInNewTab(),
     exportXlsx, importCsv, downloadSampleCsv, setInstFilter, setSettingsTab, setCur,
     dismissOnboard, duplicateTx, formatInputCurrency
   };
@@ -2315,6 +2382,12 @@ function bindWindowGlobals() {
       console.warn(`Gagal bind window.${key}:`, err);
     }
   }
+
+  try {
+    Object.defineProperty(window, 'S', { get: () => S, configurable: true });
+    Object.defineProperty(window, 'sb', { get: () => sb, set: (val) => { sb = val; }, configurable: true });
+    Object.defineProperty(window, 'CURRENT_USER', { get: () => CURRENT_USER, set: (val) => { CURRENT_USER = val; }, configurable: true });
+  } catch(e) {}
 }
 
 // Bind SEMUA fungsi ke window SEBELUM Supabase atau render dijalankan
@@ -2335,17 +2408,17 @@ declare global {
     CURRENT_USER: any;
     render: () => void;
     toggleAddSheet: (v: boolean) => void;
-    goAdd: (mode: string) => void;
+    goAdd: (mode: string | null) => void;
     openTransfer: () => void;
     togglePrivacy: () => void;
     toggleThemeSheet: (v: boolean) => void;
     changeMonth: (delta: number) => void;
     pickMonth: (el: HTMLInputElement) => void;
     pickTheme: (theme: string) => void;
-    selectTxType: (type: string, btn: HTMLElement) => void;
+    selectTxType: (type: string, btn?: HTMLElement) => void;
     pickCat: (c: string, targetId: string, chipEl?: HTMLElement) => void;
     handleSearch: (q: string) => void;
-    setTxFilter: (key: string, val: string) => void;
+    setTxFilter: (key: any, val: string) => void;
     clearTxFilter: () => void;
     editRow: (table: string, id: string) => void;
     del: (table: string, id: string) => void;
@@ -2355,6 +2428,7 @@ declare global {
     addSav: (p?: string) => void;
     addBudget: (p?: string) => void;
     addRecurring: (p?: string) => void;
+    addTransfer: (evt?: Event) => void;
     pay: (id: string) => void;
     openSavModal: (id: string, action: string) => void;
     submitSavMove: (id: string, action: string) => void;
@@ -2376,14 +2450,15 @@ declare global {
     scanReceipt: (file: File, p?: string) => void;
     printMonthlyReport: (m?: string) => void;
     closePrintModal: () => void;
+    openReportInNewTab: () => void;
     exportXlsx: () => void;
     importCsv: (file: File) => void;
     downloadSampleCsv: () => void;
-    setInstFilter: (filter: string) => void;
+    setInstFilter: (filter: 'active' | 'done') => void;
     setSettingsTab: (tab: string) => void;
     setCur: (cur: string) => void;
     dismissOnboard: () => void;
     duplicateTx: (id: string) => void;
-    formatInputCurrency: (el: HTMLInputElement) => void;
+    formatInputCurrency: (el: HTMLInputElement | null) => void;
   }
 }
