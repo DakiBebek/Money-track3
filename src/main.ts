@@ -278,6 +278,9 @@ const THEMES: Record<string, { label: string; swatch: string; vars: Record<strin
   modern: { label: 'Modern (Indigo)', swatch: '#2563eb', vars: { '--bg': '#f8fafc', '--card': '#ffffff', '--card-subtle': '#f1f5f9', '--ink': '#0f172a', '--mute': '#64748b', '--line': '#e2e8f0', '--main': '#2563eb', '--main2': '#1d4ed8', '--main-light': '#eff6ff', '--in': '#059669', '--out': '#e11d48', '--hero1': '#1e3a8a', '--hero2': '#0f172a', '--hero-ink': '#fff', '--hero-mute': '#94a3b8', '--hero-chip': 'rgba(255,255,255,.12)' } },
   klasik: { label: 'Klasik (Emerald)', swatch: '#059669', vars: { '--bg': '#f4f6f4', '--card': '#ffffff', '--card-subtle': '#e9eee9', '--ink': '#14241a', '--mute': '#536b5c', '--line': '#d8e2da', '--main': '#059669', '--main2': '#047857', '--main-light': '#ecfdf5', '--in': '#059669', '--out': '#dc2626', '--hero1': '#065f46', '--hero2': '#022c22', '--hero-ink': '#fff', '--hero-mute': '#a7f3d0', '--hero-chip': 'rgba(255,255,255,.12)' } },
   gelap: { label: 'Gelap (Obsidian)', swatch: '#6366f1', vars: { '--bg': '#090d16', '--card': '#131b2e', '--card-subtle': '#1a243d', '--ink': '#f1f5f9', '--mute': '#8192a9', '--line': '#1e293b', '--main': '#6366f1', '--main2': '#4f46e5', '--main-light': 'rgba(99,102,241,.18)', '--in': '#10b981', '--out': '#f43f5e', '--hero1': '#312e81', '--hero2': '#090d16', '--hero-ink': '#fff', '--hero-mute': '#94a3b8', '--hero-chip': 'rgba(255,255,255,.08)' } },
+  sunset: { label: 'Senja (Rose Sunset)', swatch: '#e11d48', vars: { '--bg': '#fff5f5', '--card': '#ffffff', '--card-subtle': '#ffe4e6', '--ink': '#1c1917', '--mute': '#78716c', '--line': '#fecdd3', '--main': '#e11d48', '--main2': '#be123c', '--main-light': '#ffe4e6', '--in': '#059669', '--out': '#e11d48', '--hero1': '#881337', '--hero2': '#4c0519', '--hero-ink': '#fff', '--hero-mute': '#fecdd3', '--hero-chip': 'rgba(255,255,255,.15)' } },
+  ocean: { label: 'Samudra (Deep Ocean)', swatch: '#0284c7', vars: { '--bg': '#f0f9ff', '--card': '#ffffff', '--card-subtle': '#e0f2fe', '--ink': '#082f49', '--mute': '#64748b', '--line': '#bae6fd', '--main': '#0284c7', '--main2': '#0369a1', '--main-light': '#e0f2fe', '--in': '#059669', '--out': '#e11d48', '--hero1': '#075985', '--hero2': '#0c4a6e', '--hero-ink': '#fff', '--hero-mute': '#bae6fd', '--hero-chip': 'rgba(255,255,255,.15)' } },
+  oled: { label: 'OLED (True Black)', swatch: '#000000', vars: { '--bg': '#000000', '--card': '#09090b', '--card-subtle': '#18181b', '--ink': '#fafafa', '--mute': '#a1a1aa', '--line': '#27272a', '--main': '#3b82f6', '--main2': '#60a5fa', '--main-light': 'rgba(59,130,246,.18)', '--in': '#10b981', '--out': '#f43f5e', '--hero1': '#09090b', '--hero2': '#000000', '--hero-ink': '#fff', '--hero-mute': '#a1a1aa', '--hero-chip': 'rgba(255,255,255,.10)' } },
 };
 
 let CURRENT_THEME = 'modern';
@@ -1121,6 +1124,15 @@ function home() {
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const daysLeft = Math.max(1, daysInMonth - now.getDate());
 
+  // Perhitungan Kekayaan Bersih & Kesehatan Finansial
+  const savTotalVal = savTotal();
+  const activeInst = S.inst.filter(i => i.paid_months < i.total_months);
+  const totalDebt = activeInst.reduce((s, i) => s + (i.total_months - i.paid_months) * i.monthly_amount, 0);
+  const totalAssets = total + savTotalVal;
+  const netWorth = totalAssets - totalDebt;
+  const cashflow = inc - exp;
+  const savingsRate = inc > 0 ? Math.round(((inc - exp) / inc) * 100) : 0;
+
   return `<div class="hero">
     <div class="row">
       <div style="display:flex;align-items:center;gap:10px">
@@ -1148,7 +1160,11 @@ function home() {
 
     <div class="bal-label">Total Saldo Likuid</div>
     <div class="bal">${rp(total)}</div>
-    <div class="sav-pill"><span>💰</span> Tabungan terpisah: <b>${rp(savTotal())}</b></div>
+    <div class="sav-pill" style="cursor:pointer" onclick="S.tab='accs';render()" title="Buka Detail Rekening & Aset">
+      <span>💰 Tabungan: <b>${rp(savTotalVal)}</b></span>
+      ${totalDebt > 0 ? `<span> · 💳 Cicilan: <b>${rp(totalDebt)}</b></span>` : ''}
+      <span> · 💎 Net Worth: <b>${rp(netWorth)}</b></span>
+    </div>
 
     <div class="chips">
       <div class="chip in-chip">
@@ -1184,13 +1200,27 @@ function home() {
     <div class="card insights-card">
       <div class="row" style="align-items:center">
         <div style="display:flex;align-items:center;gap:8px">
-          <div class="insights-icon">💡</div>
+          <div class="insights-icon">📊</div>
           <div>
-            <b style="font-size:13.5px;color:var(--ink)">Analisis Keuangan</b>
+            <b style="font-size:13.5px;color:var(--ink)">Kesehatan Finansial & Net Worth</b>
             <div class="mute" style="font-size:11px">Periode ${label}</div>
           </div>
         </div>
-        <span class="pill-badge">Rata-rata: <b>${rp(dailyAvg)}/hari</b></span>
+        <span class="pill-badge" style="background:${cashflow >= 0 ? 'var(--in-bg)' : 'var(--out-bg)'};color:${cashflow >= 0 ? 'var(--in)' : 'var(--out)'}">
+          ${cashflow >= 0 ? 'Surplus +' : 'Defisit -'}${rp(Math.abs(cashflow))}
+        </span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+        <div style="background:var(--card-subtle);padding:10px;border-radius:var(--radius-sm)">
+          <div class="mute" style="font-size:11px">💎 Kekayaan Bersih</div>
+          <b style="font-size:13.5px;color:var(--ink)">${rp(netWorth)}</b>
+          <div class="mute" style="font-size:10px">Aset - Cicilan</div>
+        </div>
+        <div style="background:var(--card-subtle);padding:10px;border-radius:var(--radius-sm)">
+          <div class="mute" style="font-size:11px">📈 Rasio Tabungan</div>
+          <b style="font-size:13.5px;color:${savingsRate >= 20 ? 'var(--in)' : savingsRate > 0 ? 'var(--warn)' : 'var(--out)'}">${inc > 0 ? savingsRate + '%' : '0%'}</b>
+          <div class="mute" style="font-size:10px">${savingsRate >= 20 ? 'Sangat Sehat 🎉' : savingsRate > 0 ? 'Cukup Baik 👍' : 'Perlu Dihemat ⚠️'}</div>
+        </div>
       </div>
       <div style="font-size:12.5px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);line-height:1.5">
         ${diffBadge ? `<div style="margin-bottom:6px">${diffBadge}</div>` : ''}
@@ -1289,6 +1319,16 @@ function home() {
         <button class="outline" onclick="downloadSampleCsv()" style="font-size:12px;padding:12px">📥 Template</button>
       </div>
       <input id="impFile" type="file" accept=".csv,text/csv" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;opacity:0" onchange="if(this.files && this.files[0]) { importCsv(this.files[0]); this.value = ''; }">
+      
+      <div style="border-top:1px solid var(--line);margin-top:12px;padding-top:10px">
+        <div class="mute" style="margin-bottom:6px">Cadangan Penuh (Full Backup):</div>
+        <div style="display:flex;gap:8px">
+          <button type="button" class="outline" onclick="exportBackupJson()" style="flex:1;font-size:12px">💾 Unduh Backup JSON</button>
+          <label for="restoreFile" class="scanBtn" style="flex:1;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;padding:10px">📥 Pulihkan JSON</label>
+        </div>
+        <input id="restoreFile" type="file" accept=".json,application/json" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;opacity:0" onchange="if(this.files && this.files[0]) { restoreBackupJson(this.files[0]); this.value = ''; }">
+      </div>
+
       <div id="impStatus"></div>
     </div>
   </div>`;
@@ -1296,10 +1336,40 @@ function home() {
 
 // ====== VIEW: TRANSAKSI DENGAN GROUPING TANGGAL & SUB-TOTAL ======
 let txFilter: { q: string; cat: string; from: string; to: string } = { q: '', cat: '', from: '', to: '' };
+let txTypeFilter: 'all' | 'income' | 'expense' = 'all';
 let searchTimeout: any;
 function setTxFilter(k: 'q' | 'cat' | 'from' | 'to', val: string) { txFilter[k] = val; render(); }
-function handleSearch(val: string) { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { setTxFilter('q', val); }, 250); }
-function clearTxFilter() { txFilter = { q: '', cat: '', from: '', to: '' }; render(); }
+function handleSearch(val: string) { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => { setTxFilter('q', val); }, 200); }
+function clearSearchInput() {
+  txFilter.q = '';
+  const el = document.getElementById('txq') as HTMLInputElement | null;
+  if (el) el.value = '';
+  render();
+}
+function clearTxFilter() { txFilter = { q: '', cat: '', from: '', to: '' }; txTypeFilter = 'all'; render(); }
+function setTxPreset(preset: 'all' | 'today' | '7d' | 'month') {
+  const t = today();
+  if (preset === 'today') {
+    txFilter.from = t;
+    txFilter.to = t;
+  } else if (preset === '7d') {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    txFilter.from = ym(d) + '-' + String(d.getDate()).padStart(2, '0');
+    txFilter.to = t;
+  } else if (preset === 'month') {
+    txFilter.from = S.month + '-01';
+    txFilter.to = S.month + '-31';
+  } else {
+    txFilter.from = '';
+    txFilter.to = '';
+  }
+  render();
+}
+function setTxTypeFilter(type: 'all' | 'income' | 'expense') {
+  txTypeFilter = type;
+  render();
+}
 
 function trx() {
   if (!S.acc.length) return `<h1>Transaksi</h1><div class="card" style="text-align:center;padding:30px">Belum ada rekening terdaftar. Tambahkan rekening terlebih dahulu lewat tombol <b>+</b> di bawah.</div>`;
@@ -1310,7 +1380,8 @@ function trx() {
   if (f.cat) list = list.filter(t => (t.category || 'Lainnya') === f.cat);
   if (f.from) list = list.filter(t => t.date >= f.from);
   if (f.to) list = list.filter(t => t.date <= f.to);
-  const active = f.q || f.cat || f.from || f.to;
+  if (txTypeFilter !== 'all') list = list.filter(t => t.type === txTypeFilter);
+  const active = f.q || f.cat || f.from || f.to || txTypeFilter !== 'all';
   
   const filInc = sum(list, 'income'), filExp = sum(list, 'expense');
 
@@ -1323,8 +1394,24 @@ function trx() {
 
   return `<h1>Riwayat Transaksi</h1>
   <div class="card">
-    <input id="txq" placeholder="🔍 Cari transaksi, merchant, catatan..." value="${esc(f.q)}" oninput="handleSearch(this.value)">
-    <div class="row">
+    <div style="position:relative">
+      <input id="txq" placeholder="🔍 Cari transaksi, merchant, catatan..." value="${esc(f.q)}" oninput="handleSearch(this.value)" style="padding-right:34px">
+      ${f.q ? `<button type="button" class="ghost" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);padding:4px 8px;font-size:14px;color:var(--mute)" onclick="clearSearchInput()" title="Hapus pencarian">✕</button>` : ''}
+    </div>
+    
+    <div class="chips-scroll" style="margin-top:6px;gap:6px">
+      <span class="cat-chip ${!f.from && !f.to ? 'active' : ''}" onclick="setTxPreset('all')">Semua Waktu</span>
+      <span class="cat-chip ${f.from === today() && f.to === today() ? 'active' : ''}" onclick="setTxPreset('today')">Hari Ini</span>
+      <span class="cat-chip ${f.from && f.from.startsWith(S.month) ? 'active' : ''}" onclick="setTxPreset('month')">Bulan Ini</span>
+    </div>
+
+    <div class="chips-scroll" style="margin-top:2px;gap:6px">
+      <span class="cat-chip ${txTypeFilter === 'all' ? 'active' : ''}" onclick="setTxTypeFilter('all')">Semua Tipe</span>
+      <span class="cat-chip in-chip ${txTypeFilter === 'income' ? 'active' : ''}" onclick="setTxTypeFilter('income')"><span class="in">↓</span> Masuk</span>
+      <span class="cat-chip out-chip ${txTypeFilter === 'expense' ? 'active' : ''}" onclick="setTxTypeFilter('expense')"><span class="out">↑</span> Keluar</span>
+    </div>
+
+    <div class="row" style="margin-top:6px">
       <select onchange="setTxFilter('cat', this.value)" style="margin:0">
         <option value="">Semua Kategori</option>
         ${cats.map(c => `<option value="${esc(c)}" ${f.cat === c ? 'selected' : ''}>${esc(c)}</option>`).join('')}
@@ -1703,6 +1790,82 @@ async function importCsv(file: File) {
     load();
   } catch (e) {
     if (box) box.innerHTML = '<div class="mute" style="margin-top:8px;color:var(--out)">⚠️ Format file CSV tidak didukung atau terjadi kesalahan pembacaan.</div>';
+  }
+}
+
+// ====== PENCADANGAN & PEMULIHAN PENUH (JSON BACKUP & RESTORE) ======
+function exportBackupJson() {
+  try {
+    const backup = {
+      app: 'Duitku',
+      version: '2.0.0',
+      exportDate: new Date().toISOString(),
+      user: CURRENT_USER ? { id: CURRENT_USER.id, email: CURRENT_USER.email } : null,
+      data: {
+        accounts: S.acc,
+        transactions: S.tx,
+        installments: S.inst,
+        savings: S.sav,
+        saving_moves: S.mv,
+        budgets: S.bud,
+        recurring: S.rec,
+      }
+    };
+    const jsonStr = JSON.stringify(backup, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `duitku-backup-${today()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Cadangan data JSON berhasil diunduh!', 'success');
+  } catch (err) {
+    console.error('Export JSON error:', err);
+    toast('Gagal mengunduh cadangan JSON', 'error');
+  }
+}
+
+async function restoreBackupJson(file: File) {
+  if (!file) return;
+  if (!confirm('Peringatan: Pemulihan cadangan akan menyimpan data dari file JSON ke akun Duitku Anda. Lanjutkan?')) return;
+  const box = $('impStatus');
+  if (box) box.innerHTML = '<div class="mute" style="margin-top:8px">⏳ Membaca dan memvalidasi file cadangan JSON...</div>';
+  try {
+    const text = await file.text();
+    const backup = JSON.parse(text);
+    if (!backup || !backup.data || !Array.isArray(backup.data.accounts)) {
+      throw new Error('Format file JSON tidak valid atau bukan cadangan Duitku.');
+    }
+    const d = backup.data;
+    if (sb && CURRENT_USER) {
+      if (box) box.innerHTML = '<div class="mute" style="margin-top:8px">⏳ Menyinkronkan cadangan ke server Supabase...</div>';
+      if (d.accounts?.length) await sb.from('accounts').upsert(d.accounts);
+      if (d.transactions?.length) await sb.from('transactions').upsert(d.transactions);
+      if (d.installments?.length) await sb.from('installments').upsert(d.installments);
+      if (d.savings?.length) await sb.from('savings').upsert(d.savings);
+      if (d.saving_moves?.length) await sb.from('saving_moves').upsert(d.saving_moves);
+      if (d.budgets?.length) await sb.from('budgets').upsert(d.budgets);
+      if (d.recurring?.length) await sb.from('recurring').upsert(d.recurring);
+      await load();
+    } else {
+      S.acc = d.accounts || [];
+      S.tx = d.transactions || [];
+      S.inst = d.installments || [];
+      S.sav = d.savings || [];
+      S.mv = d.saving_moves || [];
+      S.bud = d.budgets || [];
+      S.rec = d.recurring || [];
+      computeBalances();
+      saveToLocalCache();
+      render();
+    }
+    if (box) box.innerHTML = '';
+    toast('✅ Data berhasil dipulihkan dari cadangan JSON!', 'success');
+  } catch (err: any) {
+    console.error('Restore JSON error:', err);
+    if (box) box.innerHTML = `<div class="mute" style="margin-top:8px;color:var(--out)">⚠️ Gagal memulihkan cadangan: ${err.message || 'File tidak valid'}</div>`;
+    toast('Gagal memulihkan cadangan: ' + (err.message || 'File tidak valid'), 'error');
   }
 }
 
@@ -2371,7 +2534,9 @@ function bindWindowGlobals() {
     logout, login, signup, sendReset, finishRecovery, toggleForgot,
     promptGeminiKey, saveGeminiKey, scanReceipt, printMonthlyReport, closePrintModal,
     openReportInNewTab: () => (window as any).openReportInNewTab && (window as any).openReportInNewTab(),
-    exportXlsx, importCsv, downloadSampleCsv, setInstFilter, setSettingsTab, setCur,
+    exportXlsx, importCsv, downloadSampleCsv, exportBackupJson, restoreBackupJson,
+    setTxPreset, setTxTypeFilter, clearSearchInput,
+    setInstFilter, setSettingsTab, setCur,
     dismissOnboard, duplicateTx, formatInputCurrency
   };
 
@@ -2454,6 +2619,11 @@ declare global {
     exportXlsx: () => void;
     importCsv: (file: File) => void;
     downloadSampleCsv: () => void;
+    exportBackupJson: () => void;
+    restoreBackupJson: (file: File) => void;
+    setTxPreset: (preset: 'all' | 'today' | '7d' | 'month') => void;
+    setTxTypeFilter: (type: 'all' | 'income' | 'expense') => void;
+    clearSearchInput: () => void;
     setInstFilter: (filter: 'active' | 'done') => void;
     setSettingsTab: (tab: string) => void;
     setCur: (cur: string) => void;
