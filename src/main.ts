@@ -26,9 +26,19 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // ====== IKON SVG REFINED ======
 const ICONS = {
   home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>',
+  trx: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
   inst: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line></svg>',
   sav: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>',
-  accs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="16" width="20" height="4" rx="1"></rect><path d="M12 4 4 10h16Z"></path><path d="M6 10v6"></path><path d="M10 10v6"></path><path d="M14 10v6"></path><path d="M18 10v6"></path></svg>'
+  accs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="16" width="20" height="4" rx="1"></rect><path d="M12 4 4 10h16Z"></path><path d="M6 10v6"></path><path d="M10 10v6"></path><path d="M14 10v6"></path><path d="M18 10v6"></path></svg>',
+  eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
+  eyeOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>',
+  settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>',
+  transfer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"></path><path d="M3 6h18"></path><path d="m7 22-4-4 4-4"></path><path d="M21 18H3"></path></svg>',
+  arrowDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>',
+  arrowUp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>',
+  chevronRight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>',
+  chevronLeft: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>'
 };
 
 // ====== STALE-WHILE-REVALIDATE OFFLINE CACHE ======
@@ -242,7 +252,7 @@ function curBar() {
       <span class="mute">${info}</span>
     </div>
     <div style="display:flex;align-items:center;gap:6px">
-      <button class="ghost" style="padding:4px 8px;font-size:12px" onclick="togglePrivacy()" title="Sembunyikan/Tampilkan Saldo">${HIDE_NUMS ? '👁️ Tampil' : '🙈 Privasi'}</button>
+      <button class="ghost" style="padding:4px 8px;font-size:12px;display:inline-flex;align-items:center;gap:4px" onclick="togglePrivacy()" title="Sembunyikan/Tampilkan Saldo">${HIDE_NUMS ? ICONS.eye : ICONS.eyeOff} <span>${HIDE_NUMS ? 'Tampilkan' : 'Privasi'}</span></button>
       <select id="cur" onchange="setCur(this.value)">${CURS.map(c => `<option ${c === CUR ? 'selected' : ''}>${c}</option>`).join('')}</select>
     </div>
   </div>`;
@@ -853,7 +863,7 @@ function themeSheetHtml() {
   </div>`;
 }
 
-function gearBtn() { return '<button class="gear" onclick="toggleThemeSheet(true)" title="Pengaturan">⚙️</button>'; }
+function gearBtn() { return `<button class="gear" onclick="toggleThemeSheet(true)" title="Pengaturan">${ICONS.settings}</button>`; }
 
 async function run(p) {
   const { error } = await p;
@@ -1108,11 +1118,11 @@ function home() {
       const diffExp = exp - prevExp;
       const diffPct = Math.round(Math.abs(diffExp) / prevExp * 100);
       if (diffExp < 0) {
-        diffBadge = `<span class="in" style="font-weight:600">🎉 ${diffPct}% lebih hemat dibanding bulan lalu (${rp(Math.abs(diffExp))})</span>`;
+        diffBadge = `<span class="badge-pill in">↓ ${diffPct}% lebih hemat dibanding bulan lalu (-${rp(Math.abs(diffExp))})</span>`;
       } else if (diffExp > 0) {
-        diffBadge = `<span class="out" style="font-weight:600">⚠️ Pengeluaran naik ${diffPct}% dibanding bulan lalu (+${rp(diffExp)})</span>`;
+        diffBadge = `<span class="badge-pill out">↑ Naik ${diffPct}% dibanding bulan lalu (+${rp(diffExp)})</span>`;
       } else {
-        diffBadge = `<span class="mute">Pengeluaran stabil sama dengan bulan lalu</span>`;
+        diffBadge = `<span class="badge-pill mute">Pengeluaran seimbang dengan bulan lalu</span>`;
       }
     }
 
@@ -1124,119 +1134,120 @@ function home() {
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const daysLeft = Math.max(1, daysInMonth - now.getDate());
 
-  // Perhitungan Kekayaan Bersih & Kesehatan Finansial
   const savTotalVal = savTotal();
-  const activeInst = S.inst.filter(i => i.paid_months < i.total_months);
-  const totalDebt = activeInst.reduce((s, i) => s + (i.total_months - i.paid_months) * i.monthly_amount, 0);
-  const totalAssets = total + savTotalVal;
-  const netWorth = totalAssets - totalDebt;
   const cashflow = inc - exp;
-  const savingsRate = inc > 0 ? Math.round(((inc - exp) / inc) * 100) : 0;
+  const username = (CURRENT_USER && CURRENT_USER.user_metadata && CURRENT_USER.user_metadata.username) || 'Kawan';
 
   return `<div class="hero">
-    <div class="row">
-      <div style="display:flex;align-items:center;gap:10px">
-        ${userAvatarBtn(38)}
+    <div class="hero-top">
+      <div class="hero-user">
+        ${userAvatarBtn(36)}
         <div>
-          <span class="greet" style="font-size:13px;display:block">Halo, <b>${esc((CURRENT_USER && CURRENT_USER.user_metadata && CURRENT_USER.user_metadata.username) || 'Kawan')}</b> 👋</span>
-          <span class="mute" style="font-size:10.5px;color:var(--hero-mute)">Duitku Financial</span>
+          <span class="hero-subgreeting">Selamat Datang</span>
+          <b class="hero-username">${esc(username)}</b>
         </div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="gear" onclick="togglePrivacy()" title="Privasi Saldo">${HIDE_NUMS ? '👁️' : '🙈'}</button>
-        <button class="gear" onclick="toggleThemeSheet(true)" title="Pengaturan">⚙️</button>
+      <div class="hero-actions">
+        <button class="hero-btn" onclick="togglePrivacy()" title="Sembunyikan/Tampilkan Saldo">
+          ${HIDE_NUMS ? ICONS.eyeOff : ICONS.eye}
+        </button>
+        <button class="hero-btn" onclick="toggleThemeSheet(true)" title="Pengaturan">
+          ${ICONS.settings}
+        </button>
       </div>
     </div>
     
-    <div class="month-selector">
-      <button class="monthNav" onclick="changeMonth(-1)">‹</button>
-      <label class="pill">${label}
-        <input type="month" value="${m}" onchange="pickMonth(this)" style="position:absolute;inset:0;opacity:0;border:0;padding:0;cursor:pointer">
+    <div class="hero-month-bar">
+      <button class="hero-month-nav" onclick="changeMonth(-1)" title="Bulan Sebelumnya">${ICONS.chevronLeft}</button>
+      <label class="hero-month-pill">${label}
+        <input type="month" value="${m}" onchange="pickMonth(this)">
       </label>
-      <button class="monthNav" onclick="changeMonth(1)" ${m >= thisMonth ? 'disabled' : ''}>›</button>
+      <button class="hero-month-nav" onclick="changeMonth(1)" ${m >= thisMonth ? 'disabled' : ''} title="Bulan Berikutnya">${ICONS.chevronRight}</button>
     </div>
 
-    ${m !== thisMonth ? `<div class="mute" style="margin-top:6px;font-size:12px;color:var(--hero-mute)">Periode lampau · <a href="#" onclick="S.month='${thisMonth}';render();return false" style="color:#fff;text-decoration:underline">Kembali ke bulan ini</a></div>` : ''}
+    ${m !== thisMonth ? `<div class="mute" style="margin-bottom:10px;font-size:12px;color:var(--hero-mute)">Periode lampau · <a href="#" onclick="S.month='${thisMonth}';render();return false" style="color:#fff;text-decoration:underline">Kembali ke bulan ini</a></div>` : ''}
 
-    <div class="bal-label">Total Saldo Likuid</div>
-    <div class="bal">${rp(total)}</div>
-    <div class="sav-pill" style="cursor:pointer" onclick="S.tab='accs';render()" title="Buka Detail Rekening & Aset">
-      <span>💰 Tabungan: <b>${rp(savTotalVal)}</b></span>
-      ${totalDebt > 0 ? `<span> · 💳 Cicilan: <b>${rp(totalDebt)}</b></span>` : ''}
-      <span> · 💎 Net Worth: <b>${rp(netWorth)}</b></span>
+    <div class="hero-balance">
+      <div class="hero-bal-label">Total Saldo Likuid</div>
+      <div class="hero-bal-num">${rp(total)}</div>
+      ${savTotalVal > 0 ? `
+        <div class="hero-sav-link" onclick="S.tab='sav';render()" title="Buka Tabungan">
+          ${ICONS.sav}
+          <span>Tabungan Terpisah: <b>${rp(savTotalVal)}</b></span>
+          ${ICONS.chevronRight}
+        </div>
+      ` : ''}
     </div>
 
-    <div class="chips">
-      <div class="chip in-chip">
-        <div class="lbl">↓ Masuk</div>
-        <div class="n">${rp(inc)}</div>
+    <div class="hero-flow-grid">
+      <div class="hero-flow-card flow-in">
+        <div class="flow-meta">
+          <span class="flow-icon">${ICONS.arrowDown}</span>
+          <span class="flow-label">Pemasukan</span>
+        </div>
+        <div class="flow-amt">${rp(inc)}</div>
       </div>
-      <div class="chip out-chip">
-        <div class="lbl">↑ Keluar</div>
-        <div class="n">${rp(exp)}</div>
+      <div class="hero-flow-card flow-out">
+        <div class="flow-meta">
+          <span class="flow-icon">${ICONS.arrowUp}</span>
+          <span class="flow-label">Pengeluaran</span>
+        </div>
+        <div class="flow-amt">${rp(exp)}</div>
       </div>
     </div>
   </div>
 
-  <div class="wrap" style="padding-top: 44px">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-      <button class="quick-action-tile primary" onclick="goAdd('trx')">
-        <span class="qa-icon">💸</span>
-        <div style="text-align:left">
-          <b>Catat Transaksi</b>
-          <span class="qa-sub">Masuk atau keluar</span>
-        </div>
+  <div class="wrap" style="padding-top: 36px">
+    <div class="actions-grid">
+      <button class="action-btn action-primary" onclick="goAdd('trx')">
+        <span class="btn-icon">${ICONS.plus}</span>
+        <span>Catat Transaksi</span>
       </button>
-      <button class="quick-action-tile secondary" onclick="openTransfer()">
-        <span class="qa-icon">🔁</span>
-        <div style="text-align:left">
-          <b>Transfer Saldo</b>
-          <span class="qa-sub">Antar rekening</span>
-        </div>
+      <button class="action-btn action-secondary" onclick="openTransfer()">
+        <span class="btn-icon">${ICONS.transfer}</span>
+        <span>Transfer</span>
       </button>
-    </div>
-    ${onboardCard()}
-    <!-- Smart Financial Insights -->
-    <div class="card insights-card">
-      <div class="row" style="align-items:center">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="insights-icon">📊</div>
-          <div>
-            <b style="font-size:13.5px;color:var(--ink)">Kesehatan Finansial & Net Worth</b>
-            <div class="mute" style="font-size:11px">Periode ${label}</div>
-          </div>
-        </div>
-        <span class="pill-badge" style="background:${cashflow >= 0 ? 'var(--in-bg)' : 'var(--out-bg)'};color:${cashflow >= 0 ? 'var(--in)' : 'var(--out)'}">
-          ${cashflow >= 0 ? 'Surplus +' : 'Defisit -'}${rp(Math.abs(cashflow))}
-        </span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
-        <div style="background:var(--card-subtle);padding:10px;border-radius:var(--radius-sm)">
-          <div class="mute" style="font-size:11px">💎 Kekayaan Bersih</div>
-          <b style="font-size:13.5px;color:var(--ink)">${rp(netWorth)}</b>
-          <div class="mute" style="font-size:10px">Aset - Cicilan</div>
-        </div>
-        <div style="background:var(--card-subtle);padding:10px;border-radius:var(--radius-sm)">
-          <div class="mute" style="font-size:11px">📈 Rasio Tabungan</div>
-          <b style="font-size:13.5px;color:${savingsRate >= 20 ? 'var(--in)' : savingsRate > 0 ? 'var(--warn)' : 'var(--out)'}">${inc > 0 ? savingsRate + '%' : '0%'}</b>
-          <div class="mute" style="font-size:10px">${savingsRate >= 20 ? 'Sangat Sehat 🎉' : savingsRate > 0 ? 'Cukup Baik 👍' : 'Perlu Dihemat ⚠️'}</div>
-        </div>
-      </div>
-      <div style="font-size:12.5px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);line-height:1.5">
-        ${diffBadge ? `<div style="margin-bottom:6px">${diffBadge}</div>` : ''}
-        <div class="mute" style="display:flex;align-items:center;gap:6px">
-          <span>🎯</span>
-          <span>Sisa likuid aman: <b>${rp(Math.round(total / Math.max(1, daysLeft)))}/hari</b> (untuk <b>${daysLeft} hari</b> ke depan)</span>
-        </div>
-      </div>
+      <button class="action-btn action-secondary" onclick="S.tab='trx';render()">
+        <span class="btn-icon">${ICONS.trx}</span>
+        <span>Riwayat</span>
+      </button>
     </div>
 
-    
-    <h2>
-      <span>Arus Kas 6 Bulan</span>
-      <span class="mute" style="font-weight:500;cursor:pointer" onclick="S.tab='trx';render()">Detail ›</span>
-    </h2>
-    <div class="card" style="cursor:pointer" onclick="S.tab='trx';render()">
+    ${onboardCard()}
+
+    <!-- Financial Summary Card (Clean & Minimalist) -->
+    <div class="card summary-card">
+      <div class="summary-header">
+        <div>
+          <span class="summary-subtitle">Analisis Keuangan</span>
+          <b class="summary-title">Ringkasan Periode Ini</b>
+        </div>
+        <span class="summary-badge ${cashflow >= 0 ? 'badge-in' : 'badge-out'}">
+          ${cashflow >= 0 ? '+ ' + rp(cashflow) + ' Surplus' : '- ' + rp(Math.abs(cashflow)) + ' Defisit'}
+        </span>
+      </div>
+      
+      <div class="summary-metrics">
+        <div class="metric-item">
+          <span class="metric-label">Rata-rata Harian</span>
+          <span class="metric-val">${rp(dailyAvg)}</span>
+          <span class="metric-sub">${dayNum} hari berjalan</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-label">Batas Aman Likuid</span>
+          <span class="metric-val">${rp(Math.round(total / Math.max(1, daysLeft)))} / hari</span>
+          <span class="metric-sub">${daysLeft} hari tersisa</span>
+        </div>
+      </div>
+
+      ${diffBadge ? `<div class="summary-compare">${diffBadge}</div>` : ''}
+    </div>
+
+    <div class="section-head">
+      <h2>Arus Kas 6 Bulan</h2>
+      <button class="ghost-link" onclick="S.tab='trx';render()">Detail Transaksi ›</button>
+    </div>
+    <div class="card chart-card" style="cursor:pointer" onclick="S.tab='trx';render()">
       <div class="cols">
         ${data.map(d => `
           <div>
@@ -1244,10 +1255,15 @@ function home() {
               <span style="height:${Math.max(4, d[1] / max * 75)}px;background:var(--in)" title="Masuk: ${rp(d[1])}"></span>
               <span style="height:${Math.max(4, d[2] / max * 75)}px;background:var(--out)" title="Keluar: ${rp(d[2])}"></span>
             </div>
-            ${d[0].slice(5)}
+            <div class="col-lbl">${d[0].slice(5)}</div>
           </div>
         `).join('')}
       </div>
+      <div class="chart-legend">
+        <span><i class="legend-dot in"></i>Pemasukan</span>
+        <span><i class="legend-dot out"></i>Pengeluaran</span>
+      </div>
+    </div>
       <div class="row mute" style="font-size:11px;margin-top:10px;justify-content:center;gap:16px">
         <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--in);margin-right:4px"></span>Pemasukan</span>
         <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--out);margin-right:4px"></span>Pengeluaran</span>
@@ -1311,20 +1327,20 @@ function home() {
       <div class="mute" style="margin-bottom:8px">Pilih periode untuk unduhan laporan:</div>
       <input id="x_m" type="month" value="${m}">
       <div style="display:flex;gap:8px;margin:6px 0">
-        <button onclick="exportXlsx()" style="flex:1">📊 Unduh Excel (.xlsx)</button>
-        <button class="outline" onclick="printMonthlyReport(v('x_m'))" style="flex:1">📄 Cetak Laporan PDF</button>
+        <button onclick="exportXlsx()" style="flex:1">Unduh Excel (.xlsx)</button>
+        <button class="outline" onclick="printMonthlyReport(v('x_m'))" style="flex:1">Cetak Laporan PDF</button>
       </div>
       <div class="row" style="margin-top:6px">
-        <label for="impFile" class="scanBtn" style="flex:1;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center">📂 Impor File CSV</label>
-        <button class="outline" onclick="downloadSampleCsv()" style="font-size:12px;padding:12px">📥 Template</button>
+        <label for="impFile" class="scanBtn" style="flex:1;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center">Impor File CSV</label>
+        <button class="outline" onclick="downloadSampleCsv()" style="font-size:12px;padding:12px">Template CSV</button>
       </div>
       <input id="impFile" type="file" accept=".csv,text/csv" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;opacity:0" onchange="if(this.files && this.files[0]) { importCsv(this.files[0]); this.value = ''; }">
       
       <div style="border-top:1px solid var(--line);margin-top:12px;padding-top:10px">
-        <div class="mute" style="margin-bottom:6px">Cadangan Penuh (Full Backup):</div>
+        <div class="mute" style="margin-bottom:6px">Cadangan Lengkap Data (JSON):</div>
         <div style="display:flex;gap:8px">
-          <button type="button" class="outline" onclick="exportBackupJson()" style="flex:1;font-size:12px">💾 Unduh Backup JSON</button>
-          <label for="restoreFile" class="scanBtn" style="flex:1;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;padding:10px">📥 Pulihkan JSON</label>
+          <button type="button" class="outline" onclick="exportBackupJson()" style="flex:1;font-size:12px">Cadangkan Data (JSON)</button>
+          <label for="restoreFile" class="scanBtn" style="flex:1;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;padding:10px">Pulihkan Cadangan</label>
         </div>
         <input id="restoreFile" type="file" accept=".json,application/json" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;opacity:0" onchange="if(this.files && this.files[0]) { restoreBackupJson(this.files[0]); this.value = ''; }">
       </div>
@@ -1395,7 +1411,7 @@ function trx() {
   return `<h1>Riwayat Transaksi</h1>
   <div class="card">
     <div style="position:relative">
-      <input id="txq" placeholder="🔍 Cari transaksi, merchant, catatan..." value="${esc(f.q)}" oninput="handleSearch(this.value)" style="padding-right:34px">
+      <input id="txq" placeholder="Cari transaksi, merchant, catatan..." value="${esc(f.q)}" oninput="handleSearch(this.value)" style="padding-right:34px">
       ${f.q ? `<button type="button" class="ghost" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);padding:4px 8px;font-size:14px;color:var(--mute)" onclick="clearSearchInput()" title="Hapus pencarian">✕</button>` : ''}
     </div>
     
@@ -1407,8 +1423,8 @@ function trx() {
 
     <div class="chips-scroll" style="margin-top:2px;gap:6px">
       <span class="cat-chip ${txTypeFilter === 'all' ? 'active' : ''}" onclick="setTxTypeFilter('all')">Semua Tipe</span>
-      <span class="cat-chip in-chip ${txTypeFilter === 'income' ? 'active' : ''}" onclick="setTxTypeFilter('income')"><span class="in">↓</span> Masuk</span>
-      <span class="cat-chip out-chip ${txTypeFilter === 'expense' ? 'active' : ''}" onclick="setTxTypeFilter('expense')"><span class="out">↑</span> Keluar</span>
+      <span class="cat-chip ${txTypeFilter === 'income' ? 'active' : ''}" onclick="setTxTypeFilter('income')">Pemasukan</span>
+      <span class="cat-chip ${txTypeFilter === 'expense' ? 'active' : ''}" onclick="setTxTypeFilter('expense')">Pengeluaran</span>
     </div>
 
     <div class="row" style="margin-top:6px">
