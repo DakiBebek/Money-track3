@@ -25,11 +25,11 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 // ====== IKON SVG REFINED ======
 const ICONS = {
-  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>',
+  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>',
   trx: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
-  inst: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line></svg>',
-  sav: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>',
-  accs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="16" width="20" height="4" rx="1"></rect><path d="M12 4 4 10h16Z"></path><path d="M6 10v6"></path><path d="M10 10v6"></path><path d="M14 10v6"></path><path d="M18 10v6"></path></svg>',
+  inst: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line></svg>',
+  sav: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"></path></svg>',
+  accs: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="16" width="20" height="4" rx="1"></rect><path d="M12 4 4 10h16Z"></path><path d="M6 10v6"></path><path d="M10 10v6"></path><path d="M14 10v6"></path><path d="M18 10v6"></path></svg>',
   eye: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>',
   eyeOff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path><line x1="2" x2="22" y1="2" y2="22"></line></svg>',
   settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>',
@@ -38,7 +38,34 @@ const ICONS = {
   arrowDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>',
   arrowUp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>',
   chevronRight: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>',
-  chevronLeft: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>'
+  chevronLeft: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>',
+  budget: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="m16 8-8 8"></path><path d="M8 8v.01"></path><path d="M16 16v.01"></path></svg>',
+  recurring: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path><path d="m9 16 2 2 4-4"></path></svg>',
+  camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>',
+  wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></svg>',
+  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>',
+  print: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect width="12" height="8" x="6" y="14"></rect></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>',
+  // Category SVGs
+  catFood: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2"></path><path d="M15 2v14a2 2 0 0 1-2 2H9"></path><path d="M6 2v20"></path><path d="M3 2v5a3 3 0 0 0 6 0V2"></path></svg>',
+  catDrink: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"></path><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"></path><line x1="6" y1="2" x2="6" y2="4"></line><line x1="10" y1="2" x2="10" y2="4"></line><line x1="14" y1="2" x2="14" y2="4"></line></svg>',
+  catTransport: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>',
+  catFuel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 22h12"></path><path d="M4 9h10"></path><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"></path><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"></path></svg>',
+  catShopping: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>',
+  catSalary: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>',
+  catBill: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 6v12"></path></svg>',
+  catZap: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>',
+  catPhone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>',
+  catHealth: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>',
+  catInst: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"></rect><line x1="2" x2="22" y1="10" y2="10"></line></svg>',
+  catFun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="15" x="2" y="7" rx="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>',
+  catEdu: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path><path d="M6 6h10"></path><path d="M6 10h10"></path></svg>',
+  catGift: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect width="20" height="5" x="2" y="7"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>',
+  catTag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"></path><path d="M7 7h.01"></path></svg>'
 };
 
 // ====== STALE-WHILE-REVALIDATE OFFLINE CACHE ======
@@ -141,8 +168,7 @@ function toast(msg: string, type = 'info') {
   const t = document.createElement('div');
   t.className = 'toast';
   t.style.backgroundColor = type === 'error' ? 'var(--out)' : type === 'success' ? 'var(--in)' : 'var(--ink)';
-  const icon = type === 'error' ? '⚠️ ' : type === 'success' ? '✓ ' : 'ℹ️ ';
-  t.innerText = icon + msg;
+  t.innerText = msg;
   document.body.appendChild(t);
   setTimeout(() => {
     t.style.opacity = '0';
@@ -337,7 +363,7 @@ function formatInputCurrency(inputEl: HTMLInputElement | null): void {
     const calcResult = evalMathExpr(raw);
     if (calcResult !== null && badge) {
       badge.style.display = 'block';
-      badge.innerHTML = `🧮 Hasil hitung: <b>${rp(calcResult)}</b> (Tekan Enter/Selesai untuk menerapkan)`;
+      badge.innerHTML = `Hasil hitung: <b>${rp(calcResult)}</b> (Tekan Enter untuk menerapkan)`;
       return;
     } else if (badge) {
       badge.style.display = 'none';
@@ -482,13 +508,13 @@ function addSheetHtml() {
   if (!showAddSheet) return '';
   if (!addMode) {
     const opts = [
-      ['trx', '💸', 'Transaksi', 'Catat pemasukan atau pengeluaran'],
-      ['transfer', '🔁', 'Transfer Saldo', 'Pindah dana antar rekening'],
-      ['inst', '🏦', 'Cicilan Pinjaman', 'Catat kredit / cicilan bulanan'],
-      ['sav', '💰', 'Tabungan Impian', 'Buat pos target atau alokasi tabungan'],
-      ['accs', '🏛️', 'Rekening & Dompet', 'Tambah dompet tunai atau rekening bank'],
-      ['budget', '🎯', 'Anggaran (Budget)', 'Batas belanja per kategori bulanan'],
-      ['recurring', '📆', 'Transaksi Rutin', 'Otomatis tiap tanggal tertentu']
+      ['trx', ICONS.trx, 'Transaksi', 'Catat pemasukan atau pengeluaran'],
+      ['transfer', ICONS.transfer, 'Transfer Saldo', 'Pindah dana antar rekening'],
+      ['inst', ICONS.inst, 'Cicilan Pinjaman', 'Catat kredit / cicilan bulanan'],
+      ['sav', ICONS.sav, 'Tabungan Impian', 'Buat pos target atau alokasi tabungan'],
+      ['accs', ICONS.accs, 'Rekening & Dompet', 'Tambah dompet tunai atau rekening bank'],
+      ['budget', ICONS.budget, 'Anggaran (Budget)', 'Batas belanja per kategori bulanan'],
+      ['recurring', ICONS.recurring, 'Transaksi Rutin', 'Otomatis tiap tanggal tertentu']
     ];
     return `<div class="sheet-bg" onclick="if(event.target===this)toggleAddSheet(false)">
       <div class="sheet">
@@ -519,16 +545,16 @@ function addSheetHtml() {
     body = `${ed ? '' : `
       <label for="scanFile" class="scan-banner" style="display:flex;cursor:pointer;position:relative">
         <div style="display:flex;align-items:center;gap:10px;pointer-events:none">
-          <div style="width:36px;height:36px;border-radius:10px;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:var(--shadow-sm)">
-            ${GEMINI_API_KEY ? '✨' : '📷'}
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--main);box-shadow:var(--shadow-sm);border:1px solid var(--line)">
+            <span style="width:18px;height:18px;display:flex">${ICONS.camera}</span>
           </div>
           <div>
-            <b style="font-size:13px;color:var(--ink);display:block">${GEMINI_API_KEY ? 'Scan Struk AI (Gemini Vision)' : 'Pindai Struk Belanja (OCR)'}</b>
-            <span class="mute" style="font-size:11px">${GEMINI_API_KEY ? 'Otomatis baca total, tanggal & kategori' : 'Ketuk untuk foto atau pilih struk'}</span>
+            <b style="font-size:13px;color:var(--ink);display:block">Pindai Struk Belanja</b>
+            <span class="mute" style="font-size:11px">Foto nota belanja untuk isi data otomatis</span>
           </div>
         </div>
         <button type="button" class="outline" style="font-size:11px;padding:6px 10px;white-space:nowrap;background:var(--card);position:relative;z-index:2" onclick="event.preventDefault();event.stopPropagation();promptGeminiKey()" title="Atur Google Gemini API Key">
-          ${GEMINI_API_KEY ? '🤖 AI Aktif' : '⚡ Pakai AI'}
+          ${GEMINI_API_KEY ? 'Mode Cerdas Aktif' : 'Atur AI'}
         </button>
       </label>
       <input id="scanFile" type="file" accept="image/*" capture="environment" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;opacity:0" onchange="if(this.files && this.files[0]) { scanReceipt(this.files[0], 'qt_'); this.value = ''; }">
@@ -552,7 +578,7 @@ function addSheetHtml() {
       <input id="qt_date" type="date" value="${ed ? ed.date : today()}">
       <button style="width:100%;margin-top:8px" onclick="addTx('qt_')">${ed ? 'Simpan Perubahan' : 'Simpan Transaksi'}</button>
       ${ed ? `
-        <button type="button" class="outline" style="width:100%;margin-top:6px" onclick="duplicateTx('${ed.id}')">📋 Duplikat Jadi Transaksi Baru</button>
+        <button type="button" class="outline" style="width:100%;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:6px" onclick="duplicateTx('${ed.id}')"><span style="width:14px;height:14px;display:flex">${ICONS.copy}</span> Duplikat Jadi Transaksi Baru</button>
         <button class="ghost danger" style="width:100%;margin-top:6px" onclick="del('transactions','${ed.id}');toggleAddSheet(false)">Hapus Transaksi Ini</button>
       ` : ''}`;
   } else if (addMode === 'transfer') {
@@ -645,13 +671,13 @@ function themeListHtml() {
     <div class="theme-opt ${k === CURRENT_THEME ? 'on' : ''}" onclick="pickTheme('${k}')">
       <div class="swatch" style="background:${t.swatch}"></div>
       <b>${t.label}</b>
-      ${k === CURRENT_THEME ? '<span class="check">✓</span>' : ''}
+      ${k === CURRENT_THEME ? `<span class="check" style="display:flex;align-items:center;width:16px;height:16px;color:var(--main)">${ICONS.check}</span>` : ''}
     </div>`).join('');
 }
 
 
 // ====== FOTO PROFIL & AVATAR PENGGUNA ======
-const PRESET_AVATARS = ['💼', '🦊', '🐼', '🦁', '🚀', '💎', '🐱', '☕'];
+const PRESET_AVATARS = ['IDR', 'USD', 'BCA', 'SAV', 'WAL', 'INV', 'NET', 'PAY'];
 
 function avatarImgHtml(u: any, size = 32) {
   const av = u && u.user_metadata && u.user_metadata.avatar_url;
@@ -817,7 +843,9 @@ function accountHtml() {
     <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line)">
       <label for="avatarFileInput" style="position:relative;width:86px;height:86px;cursor:pointer;display:block" title="Ketuk untuk ganti foto profil">
         ${avatarImgHtml(u, 86)}
-        <div style="position:absolute;bottom:0;right:0;width:28px;height:28px;border-radius:50%;background:var(--main);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:var(--shadow-sm);border:2px solid var(--card)">📷</div>
+        <div style="position:absolute;bottom:0;right:0;width:28px;height:28px;border-radius:50%;background:var(--main);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm);border:2px solid var(--card);padding:5px">
+          <span style="width:14px;height:14px;display:flex">${ICONS.camera}</span>
+        </div>
       </label>
       <input id="avatarFileInput" type="file" accept="image/*" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;opacity:0" onchange="if(this.files && this.files[0]) { uploadProfilePhoto(this.files[0]); this.value = ''; }">
       <div id="pf_avatar_status" style="font-size:12px;margin-top:4px"></div>
@@ -827,9 +855,9 @@ function accountHtml() {
         ${u && u.user_metadata && u.user_metadata.avatar_url ? `<button class="ghost danger" style="font-size:12px;padding:6px 10px" onclick="removeAvatar()">Hapus</button>` : ''}
       </div>
 
-      <div class="mute" style="font-size:11px;margin:12px 0 6px;text-align:center">Atau pilih avatar karakter siap pakai:</div>
+      <div class="mute" style="font-size:11px;margin:12px 0 6px;text-align:center">Atau pilih avatar monogram:</div>
       <div style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
-        ${PRESET_AVATARS.map(av => `<button type="button" class="avatar-preset-btn" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card-subtle);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer" onclick="setPresetAvatar('${av}')" title="Gunakan avatar ${av}">${av}</button>`).join('')}
+        ${PRESET_AVATARS.map(av => `<button type="button" class="avatar-preset-btn" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--card-subtle);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink)" onclick="setPresetAvatar('${av}')" title="Gunakan avatar ${av}">${av}</button>`).join('')}
       </div>
     </div>
 
@@ -1054,11 +1082,20 @@ const savTotal = () => S.sav.reduce((t: number, x: any) => t + savBal(x), 0);
 const accName = (id: string) => (S.acc.find(a => a.id === id) || {}).name || '-';
 
 const CAT_ICON: Record<string, string> = {
-  makan: '🍜', makanan: '🍜', minuman: '🥤', transport: '🚗', bensin: '⛽', belanja: '🛍️',
-  gaji: '💰', tagihan: '🧾', listrik: '💡', pulsa: '📱', kesehatan: '💊', cicilan: '🏦',
-  hiburan: '🎬', pendidikan: '📚', hadiah: '🎁', transfer: '🔁', lainnya: '💳'
+  makan: ICONS.catFood, makanan: ICONS.catFood, kuliner: ICONS.catFood,
+  minuman: ICONS.catDrink, kopi: ICONS.catDrink,
+  transport: ICONS.catTransport, bensin: ICONS.catFuel, kendaraan: ICONS.catTransport,
+  belanja: ICONS.catShopping, shopping: ICONS.catShopping,
+  gaji: ICONS.catSalary, pendapatan: ICONS.catSalary, bonus: ICONS.catSalary,
+  tagihan: ICONS.catBill, listrik: ICONS.catZap, air: ICONS.catBill, internet: ICONS.catZap, wifi: ICONS.catZap, pulsa: ICONS.catPhone,
+  kesehatan: ICONS.catHealth, medis: ICONS.catHealth, obat: ICONS.catHealth,
+  cicilan: ICONS.catInst, pinjaman: ICONS.catInst, hutang: ICONS.catInst,
+  hiburan: ICONS.catFun, nonton: ICONS.catFun, rekreasi: ICONS.catFun,
+  pendidikan: ICONS.catEdu, kursus: ICONS.catEdu, buku: ICONS.catEdu,
+  hadiah: ICONS.catGift, donasi: ICONS.catGift, sedekah: ICONS.catGift,
+  transfer: ICONS.transfer, lainnya: ICONS.catTag
 };
-const catIcon = (k?: string) => CAT_ICON[(k || '').toLowerCase()] || (k ? '💳' : '💳');
+const catIcon = (k?: string) => CAT_ICON[(k || '').toLowerCase()] || ICONS.catTag;
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[c] || c));
 
 // ====== RENDER UI UTAMA ======
@@ -1071,7 +1108,7 @@ function render() {
   const tabs = [
     ['home', 'Beranda', ICONS.home], 
     ['inst', 'Cicilan', ICONS.inst], 
-    ['fab', 'Tambah', '+'], 
+    ['fab', 'Tambah', ICONS.plus], 
     ['sav', 'Tabungan', ICONS.sav], 
     ['accs', 'Rekening', ICONS.accs]
   ];
@@ -1090,7 +1127,7 @@ function onboardCard() {
   try { dismissed = localStorage.getItem('onboarded') === '1'; } catch (e) {}
   if (dismissed || S.acc.length) return '';
   return `<div class="card" style="border-left: 4px solid var(--main)">
-    <b>Selamat datang di Duitku 👋</b>
+    <b>Selamat datang di Duitku</b>
     <div class="mute" style="margin:6px 0 10px">Mulai kelola keuangan dengan menekan tombol <b>+</b> di bawah untuk menambahkan rekening atau dompet pertama Anda.</div>
     <button class="ghost" style="padding-left:0;color:var(--main)" onclick="dismissOnboard()">Saya mengerti, sembunyikan</button>
   </div>`;
@@ -1138,66 +1175,65 @@ function home() {
   const cashflow = inc - exp;
   const username = (CURRENT_USER && CURRENT_USER.user_metadata && CURRENT_USER.user_metadata.username) || 'Kawan';
 
-  return `<div class="hero">
-    <div class="hero-top">
-      <div class="hero-user">
-        ${userAvatarBtn(36)}
+  return `<div class="wrap" style="padding-top: 16px">
+    <!-- Top Bar -->
+    <div class="top-nav">
+      <div class="top-user">
+        ${userAvatarBtn(38)}
         <div>
-          <span class="hero-subgreeting">Selamat Datang</span>
-          <b class="hero-username">${esc(username)}</b>
+          <span class="top-greeting">Selamat Datang</span>
+          <b class="top-username">${esc(username)}</b>
         </div>
       </div>
-      <div class="hero-actions">
-        <button class="hero-btn" onclick="togglePrivacy()" title="Sembunyikan/Tampilkan Saldo">
+      <div class="top-actions">
+        <button class="top-btn" onclick="togglePrivacy()" title="Sembunyikan/Tampilkan Saldo">
           ${HIDE_NUMS ? ICONS.eyeOff : ICONS.eye}
         </button>
-        <button class="hero-btn" onclick="toggleThemeSheet(true)" title="Pengaturan">
+        <button class="top-btn" onclick="toggleThemeSheet(true)" title="Pengaturan">
           ${ICONS.settings}
         </button>
       </div>
     </div>
-    
-    <div class="hero-month-bar">
-      <button class="hero-month-nav" onclick="changeMonth(-1)" title="Bulan Sebelumnya">${ICONS.chevronLeft}</button>
-      <label class="hero-month-pill">${label}
-        <input type="month" value="${m}" onchange="pickMonth(this)">
-      </label>
-      <button class="hero-month-nav" onclick="changeMonth(1)" ${m >= thisMonth ? 'disabled' : ''} title="Bulan Berikutnya">${ICONS.chevronRight}</button>
-    </div>
 
-    ${m !== thisMonth ? `<div class="mute" style="margin-bottom:10px;font-size:12px;color:var(--hero-mute)">Periode lampau · <a href="#" onclick="S.month='${thisMonth}';render();return false" style="color:#fff;text-decoration:underline">Kembali ke bulan ini</a></div>` : ''}
+    <!-- Balance Card (Fintech Card Style) -->
+    <div class="fin-card">
+      <div class="fin-card-top">
+        <span class="fin-card-label">Total Saldo Likuid</span>
+        <div class="fin-month-bar">
+          <button class="fin-month-nav" onclick="changeMonth(-1)" title="Bulan Sebelumnya">${ICONS.chevronLeft}</button>
+          <label class="fin-month-pill">${label}
+            <input type="month" value="${m}" onchange="pickMonth(this)">
+          </label>
+          <button class="fin-month-nav" onclick="changeMonth(1)" ${m >= thisMonth ? 'disabled' : ''} title="Bulan Berikutnya">${ICONS.chevronRight}</button>
+        </div>
+      </div>
 
-    <div class="hero-balance">
-      <div class="hero-bal-label">Total Saldo Likuid</div>
-      <div class="hero-bal-num">${rp(total)}</div>
+      ${m !== thisMonth ? `<div class="mute" style="margin-bottom:8px;font-size:11.5px;color:rgba(255,255,255,0.7)">Periode lampau · <a href="#" onclick="S.month='${thisMonth}';render();return false" style="color:#fff;text-decoration:underline">Kembali ke bulan ini</a></div>` : ''}
+
+      <div class="fin-balance-num">${rp(total)}</div>
+
       ${savTotalVal > 0 ? `
-        <div class="hero-sav-link" onclick="S.tab='sav';render()" title="Buka Tabungan">
-          ${ICONS.sav}
+        <div class="fin-sav-tag" onclick="S.tab='sav';render()" title="Buka Tabungan">
+          <span class="fin-sav-ic">${ICONS.sav}</span>
           <span>Tabungan Terpisah: <b>${rp(savTotalVal)}</b></span>
-          ${ICONS.chevronRight}
+          <span class="fin-sav-arrow">${ICONS.chevronRight}</span>
         </div>
       ` : ''}
-    </div>
 
-    <div class="hero-flow-grid">
-      <div class="hero-flow-card flow-in">
-        <div class="flow-meta">
-          <span class="flow-icon">${ICONS.arrowDown}</span>
-          <span class="flow-label">Pemasukan</span>
+      <div class="fin-flows-row">
+        <div class="fin-flow-col in-col">
+          <span class="fin-flow-lbl">Pemasukan</span>
+          <b class="fin-flow-val">+${rp(inc)}</b>
         </div>
-        <div class="flow-amt">${rp(inc)}</div>
-      </div>
-      <div class="hero-flow-card flow-out">
-        <div class="flow-meta">
-          <span class="flow-icon">${ICONS.arrowUp}</span>
-          <span class="flow-label">Pengeluaran</span>
+        <div class="fin-flow-divider"></div>
+        <div class="fin-flow-col out-col">
+          <span class="fin-flow-lbl">Pengeluaran</span>
+          <b class="fin-flow-val">-${rp(exp)}</b>
         </div>
-        <div class="flow-amt">${rp(exp)}</div>
       </div>
     </div>
-  </div>
 
-  <div class="wrap" style="padding-top: 36px">
+    <!-- Quick Action Bar -->
     <div class="actions-grid">
       <button class="action-btn action-primary" onclick="goAdd('trx')">
         <span class="btn-icon">${ICONS.plus}</span>
@@ -1315,7 +1351,7 @@ function home() {
           </div>
           <div class="bar"><i style="width:${pct}%;background:${over ? 'var(--out)' : pct > 80 ? 'var(--warn)' : 'var(--main)'}"></i></div>
           <div class="row mute" style="font-size:11.5px">
-            <span>${over ? '<b class="out">⚠️ Overbudget ' + rp(spent - b.monthly_limit) + '</b>' : 'Sisa budget ' + rp(remaining)}</span>
+            <span>${over ? '<b class="out">Overbudget ' + rp(spent - b.monthly_limit) + '</b>' : 'Sisa budget ' + rp(remaining)}</span>
             <span>${!over && m === thisMonth ? 'Batas aman: <b>' + rp(dailySafe) + '/hari</b>' : ''}</span>
           </div>
         </div>`;
@@ -1412,7 +1448,7 @@ function trx() {
   <div class="card">
     <div style="position:relative">
       <input id="txq" placeholder="Cari transaksi, merchant, catatan..." value="${esc(f.q)}" oninput="handleSearch(this.value)" style="padding-right:34px">
-      ${f.q ? `<button type="button" class="ghost" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);padding:4px 8px;font-size:14px;color:var(--mute)" onclick="clearSearchInput()" title="Hapus pencarian">✕</button>` : ''}
+      ${f.q ? `<button type="button" class="ghost" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);padding:4px 8px;display:flex;align-items:center;color:var(--mute)" onclick="clearSearchInput()" title="Hapus pencarian"><span style="width:14px;height:14px;display:flex">${ICONS.close}</span></button>` : ''}
     </div>
     
     <div class="chips-scroll" style="margin-top:6px;gap:6px">
@@ -1507,15 +1543,15 @@ function accs() {
   return `<h1>Rekening & Dompet</h1>
   <div style="display:flex;gap:8px;margin-bottom:12px">
     <button style="flex:1" onclick="goAdd('accs')">+ Tambah Rekening</button>
-    <button class="outline" style="flex:1" onclick="openTransfer()">🔁 Transfer Saldo</button>
+    <button class="outline" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px" onclick="openTransfer()"><span style="width:15px;height:15px;display:flex">${ICONS.transfer}</span> Transfer Saldo</button>
   </div>
 
   ${S.acc.map(a => `
     <div class="acc-card">
       <div class="row">
         <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:40px;height:40px;border-radius:12px;background:var(--main-light);color:var(--main);display:flex;align-items:center;justify-content:center;font-size:20px">
-            ${a.name.toLowerCase().includes('tunai') || a.name.toLowerCase().includes('cash') || a.name.toLowerCase().includes('dompet') ? '💵' : '🏦'}
+          <div style="width:40px;height:40px;border-radius:12px;background:var(--card-subtle);color:var(--main);display:flex;align-items:center;justify-content:center;border:1px solid var(--line);padding:9px">
+            ${a.name.toLowerCase().includes('tunai') || a.name.toLowerCase().includes('cash') || a.name.toLowerCase().includes('dompet') ? ICONS.wallet : ICONS.accs}
           </div>
           <div>
             <b style="font-size:16px;color:var(--ink);display:block">${esc(a.name)}</b>
@@ -1531,8 +1567,8 @@ function accs() {
       </div>
 
       <div class="row" style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line)">
-        <button class="outline" style="font-size:12px;padding:6px 14px;border-radius:999px" onclick="filterByAcc('${a.id}')">
-          📜 Lihat Mutasi
+        <button class="outline" style="font-size:12px;padding:6px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px" onclick="filterByAcc('${a.id}')">
+          <span style="width:13px;height:13px;display:flex">${ICONS.trx}</span> Lihat Mutasi
         </button>
         <div style="display:flex;gap:4px">
           <button class="ghost" style="padding:6px 10px;font-size:12px" onclick="editRow('accounts','${a.id}')">Edit</button>
@@ -1585,7 +1621,7 @@ function inst() {
       <div class="bar"><i style="width:${pct}%"></i></div>
       <div class="row mute" style="font-size:12px">
         <span>${i.paid_months} / ${i.total_months} bulan (${Math.round(pct)}%)</span>
-        <b style="color:var(--ink)">${left > 0 ? left + ' bulan lagi' : '🎉 LUNAS'}</b>
+        <b style="color:var(--ink)">${left > 0 ? left + ' bulan lagi' : '<span class="badge in">Lunas</span>'}</b>
       </div>
       <div class="row mute" style="margin-top:6px;font-size:11.5px">
         <span>Sisa: <b>${rp(left * i.monthly_amount)}</b></span>
@@ -1647,7 +1683,7 @@ function sav() {
           <span>Target: <b>${rp(x.target)}</b></span>
           <b>${Math.round(pct)}%</b>
         </div>
-        ${remaining > 0 ? `<div class="mute" style="font-size:11.5px;margin-top:4px">Kurang <b>${rp(remaining)}</b> lagi</div>` : '<div class="in" style="font-size:12px;font-weight:700;margin-top:4px">🎉 Target Tabungan Tercapai!</div>'}
+        ${remaining > 0 ? `<div class="mute" style="font-size:11.5px;margin-top:4px">Kurang <b>${rp(remaining)}</b> lagi</div>` : '<div class="in" style="font-size:12px;font-weight:700;margin-top:4px">Target Tabungan Tercapai</div>'}
       ` : ''}
 
       <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
@@ -1681,7 +1717,7 @@ function openSavModal(savId: string, action: string) {
     <div class="sheet-bg" id="savModal" onclick="if(event.target===this)this.remove()">
       <div class="sheet">
         <div class="sheet-handle"></div>
-        <h3>${isDeposit ? '💰 Setor Tabungan: ' : '🏧 Tarik Saldo: '} ${esc(x.name)}</h3>
+        <h3>${isDeposit ? 'Setor Tabungan: ' : 'Tarik Saldo: '} ${esc(x.name)}</h3>
         <div class="mute" style="margin-bottom:8px">Saldo saat ini: <b>${rp(savBal(x))}</b></div>
         <input id="modal_sav_amt" type="text" inputmode="numeric" placeholder="Nominal (${CUR})" oninput="formatInputCurrency(this)">
         ${!isDeposit && S.acc.length ? `
@@ -1802,10 +1838,10 @@ async function importCsv(file: File) {
 
     if (toInsert.length) await run(sb.from('transactions').insert(toInsert));
     if (box) box.innerHTML = '';
-    toast(`✅ Berhasil impor ${toInsert.length} transaksi${skipped ? ` (${skipped} dilewati)` : ''}`, 'success');
+    toast(`Berhasil impor ${toInsert.length} transaksi${skipped ? ` (${skipped} dilewati)` : ''}`, 'success');
     load();
   } catch (e) {
-    if (box) box.innerHTML = '<div class="mute" style="margin-top:8px;color:var(--out)">⚠️ Format file CSV tidak didukung atau terjadi kesalahan pembacaan.</div>';
+    if (box) box.innerHTML = '<div class="mute" style="margin-top:8px;color:var(--out)">Format file CSV tidak didukung atau terjadi kesalahan pembacaan.</div>';
   }
 }
 
@@ -1846,7 +1882,7 @@ async function restoreBackupJson(file: File) {
   if (!file) return;
   if (!confirm('Peringatan: Pemulihan cadangan akan menyimpan data dari file JSON ke akun Duitku Anda. Lanjutkan?')) return;
   const box = $('impStatus');
-  if (box) box.innerHTML = '<div class="mute" style="margin-top:8px">⏳ Membaca dan memvalidasi file cadangan JSON...</div>';
+  if (box) box.innerHTML = '<div class="mute" style="margin-top:8px">Membaca dan memvalidasi file cadangan JSON...</div>';
   try {
     const text = await file.text();
     const backup = JSON.parse(text);
@@ -1855,7 +1891,7 @@ async function restoreBackupJson(file: File) {
     }
     const d = backup.data;
     if (sb && CURRENT_USER) {
-      if (box) box.innerHTML = '<div class="mute" style="margin-top:8px">⏳ Menyinkronkan cadangan ke server Supabase...</div>';
+      if (box) box.innerHTML = '<div class="mute" style="margin-top:8px">Menyinkronkan cadangan ke server Supabase...</div>';
       if (d.accounts?.length) await sb.from('accounts').upsert(d.accounts);
       if (d.transactions?.length) await sb.from('transactions').upsert(d.transactions);
       if (d.installments?.length) await sb.from('installments').upsert(d.installments);
@@ -1877,10 +1913,10 @@ async function restoreBackupJson(file: File) {
       render();
     }
     if (box) box.innerHTML = '';
-    toast('✅ Data berhasil dipulihkan dari cadangan JSON!', 'success');
+    toast('Data berhasil dipulihkan dari cadangan JSON!', 'success');
   } catch (err: any) {
     console.error('Restore JSON error:', err);
-    if (box) box.innerHTML = `<div class="mute" style="margin-top:8px;color:var(--out)">⚠️ Gagal memulihkan cadangan: ${err.message || 'File tidak valid'}</div>`;
+    if (box) box.innerHTML = `<div class="mute" style="margin-top:8px;color:var(--out)">Gagal memulihkan cadangan: ${err.message || 'File tidak valid'}</div>`;
     toast('Gagal memulihkan cadangan: ' + (err.message || 'File tidak valid'), 'error');
   }
 }
@@ -1908,11 +1944,11 @@ function printMonthlyReport(m?: string) {
     <div class="print-modal-backdrop no-print" onclick="closePrintModal()"></div>
     <div class="print-modal-container">
       <div class="print-actions-bar no-print">
-        <div style="font-weight:700;font-size:14px;color:var(--ink)">📄 Laporan Keuangan (${label})</div>
+        <div style="font-weight:700;font-size:14px;color:var(--ink)">Laporan Keuangan (${label})</div>
         <div style="display:flex;gap:8px;align-items:center">
-          <button class="outline" onclick="openReportInNewTab()" style="padding:6px 12px;font-size:12px">↗️ Buka Tab Baru</button>
-          <button style="padding:6px 14px;font-size:12px;font-weight:600" onclick="window.print()">🖨️ Cetak / Simpan PDF</button>
-          <button class="ghost" onclick="closePrintModal()" style="padding:6px 10px;font-size:16px;line-height:1">✕</button>
+          <button class="outline" onclick="openReportInNewTab()" style="padding:6px 12px;font-size:12px">Buka Tab Baru</button>
+          <button style="padding:6px 14px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px" onclick="window.print()"><span style="width:14px;height:14px;display:flex">${ICONS.print}</span> Cetak / Simpan PDF</button>
+          <button class="ghost" onclick="closePrintModal()" style="padding:6px 10px;display:flex;align-items:center"><span style="width:16px;height:16px;display:flex">${ICONS.close}</span></button>
         </div>
       </div>
 
@@ -1973,7 +2009,7 @@ function printMonthlyReport(m?: string) {
   document.body.appendChild(modal);
 
   (window as any).openReportInNewTab = () => {
-    const fullHtml = `<!doctype html><html><head><meta charset="utf-8"><title>Laporan Keuangan Duitku - ${label}</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:32px;color:#0f172a;max-width:820px;margin:0 auto;line-height:1.4}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 10px;border-bottom:1px solid #e2e8f0}@media print{.no-print{display:none!important}}</style></head><body><div class="no-print" style="margin-bottom:16px"><button onclick="window.print()" style="padding:8px 16px;border-radius:6px;background:#2563eb;color:#fff;border:0;cursor:pointer;font-weight:600">🖨️ Cetak / Simpan PDF</button></div>` + modal.querySelector('.printable-sheet')!.innerHTML + `</body></html>`;
+    const fullHtml = `<!doctype html><html><head><meta charset="utf-8"><title>Laporan Keuangan Duitku - ${label}</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:32px;color:#0f172a;max-width:820px;margin:0 auto;line-height:1.4}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 10px;border-bottom:1px solid #e2e8f0}@media print{.no-print{display:none!important}}</style></head><body><div class="no-print" style="margin-bottom:16px"><button onclick="window.print()" style="padding:8px 16px;border-radius:6px;background:#2563eb;color:#fff;border:0;cursor:pointer;font-weight:600">Cetak / Simpan PDF</button></div>` + modal.querySelector('.printable-sheet')!.innerHTML + `</body></html>`;
     const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const win = window.open(url, '_blank');
@@ -2163,7 +2199,7 @@ async function scanReceipt(file: File, p?: string) {
 
   // ENGINE 1: GOOGLE GEMINI AI VISION (JIKA API KEY TERSEDIA)
   if (GEMINI_API_KEY) {
-    setBox('<div class="mute" style="margin:8px 0">✨ Mengirim gambar ke Google Gemini AI Vision...</div>');
+    setBox('<div class="mute" style="margin:8px 0">Menganalisis gambar struk belanja...</div>');
     try {
       const base64Data = await fileToBase64(file);
       const mimeType = file.type || 'image/jpeg';
@@ -2227,22 +2263,22 @@ Hanya kembalikan JSON murni tanpa markdown triple backticks.`;
       if (catEl && catVal) catEl.value = catVal;
 
       setBox(`<div class="mute" style="margin:6px 0;color:var(--in)">
-        ✨ <b>Dianalisis Sempurna oleh Gemini AI!</b><br>
+        <b>Struk Berhasil Dianalisis</b><br>
         Total: <b>${rp(totalVal)}</b> ${catVal ? `· Kategori: <b>${catVal}</b>` : ''} ${merchantVal ? `· Toko: <b>${esc(merchantVal)}</b>` : ''}
       </div>`);
       return;
     } catch(aiErr: any) {
       console.warn('Gemini AI Vision gagal, beralih ke local OCR:', aiErr);
-      setBox(`<div class="mute" style="margin:6px 0;color:var(--warn)">⚠️ AI API gagal (${aiErr?.message || 'Error'}), beralih ke scanner lokal...</div>`);
+      setBox(`<div class="mute" style="margin:6px 0;color:var(--warn)">Analisis cloud dialihkan ke scanner lokal...</div>`);
     }
   }
 
   // ENGINE 2: LOCAL HIGH-ACCURACY OCR DENGAN PERBAIKAN DESIMAL (ANTI-SALAH 20.000,00 JADI 2 JUTA)
-  setBox('<div class="mute" style="margin:8px 0">⏳ Mempersiapkan scanner struk lokal...</div>');
+  setBox('<div class="mute" style="margin:8px 0">Mempersiapkan scanner struk lokal...</div>');
   try { 
     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js', 'Tesseract'); 
   } catch (e) { 
-    setBox('<div class="mute" style="margin:8px 0;color:var(--out)">⚠️ Gagal memuat library scanner OCR. Periksa koneksi internet Anda.</div>'); 
+    setBox('<div class="mute" style="margin:8px 0;color:var(--out)">Gagal memuat library scanner OCR. Periksa koneksi internet Anda.</div>'); 
     return; 
   }
 
@@ -2255,7 +2291,7 @@ Hanya kembalikan JSON murni tanpa markdown triple backticks.`;
     const { data } = await tess.recognize(processedImg, 'ind+eng', {
       logger: (m: any) => {
         if (m.status === 'recognizing text' && m.progress !== undefined) {
-          setBox(`<div class="mute" style="margin:8px 0">🔍 Memindai teks struk... <b>${Math.round(m.progress * 100)}%</b></div>`);
+          setBox(`<div class="mute" style="margin:8px 0">Memindai teks struk... <b>${Math.round(m.progress * 100)}%</b></div>`);
         }
       }
     });
@@ -2387,12 +2423,12 @@ Hanya kembalikan JSON murni tanpa markdown triple backticks.`;
 
     setBox((bestTotal ? 
       `<div class="mute" style="margin:6px 0;color:var(--in)">
-        ✓ <b>Terdeteksi (OCR Lokal)!</b><br>
+        <b>Struk Berhasil Dipindai</b><br>
         Nominal: <b>${rp(bestTotal)}</b> ${detectedCat ? `· Kategori: <b>${detectedCat}</b>` : ''} ${merchant ? `· Toko: <b>${esc(merchant)}</b>` : ''}
-        <div style="font-size:11px;color:var(--mute);margin-top:2px">💡 Tips: Aktifkan API Key Gemini (gratis) untuk akurasi 100% tanpa salah baca.</div>
+        <div style="font-size:11px;color:var(--mute);margin-top:2px">Gunakan API Key Gemini di profil akun untuk deteksi lebih detail.</div>
       </div>` : 
       `<div class="mute" style="margin:6px 0;color:var(--warn)">
-        ⚠️ Angka total belum terdeteksi otomatis, silakan ketik manual.
+        Total belanja belum terdeteksi otomatis, silakan ketik nominal manual.
       </div>`
     ) + `<details style="margin-top:6px">
       <summary class="mute" style="cursor:pointer;font-size:11.5px">Lihat hasil teks OCR mentah</summary>
@@ -2401,7 +2437,7 @@ Hanya kembalikan JSON murni tanpa markdown triple backticks.`;
 
   } catch (err: any) {
     console.error(err);
-    setBox('<div class="mute" style="margin:6px 0;color:var(--out)">⚠️ Gagal memindai struk. Silakan isi form secara manual.</div>');
+    setBox('<div class="mute" style="margin:6px 0;color:var(--out)">Gagal memindai struk. Silakan isi form secara manual.</div>');
   }
 }
 
